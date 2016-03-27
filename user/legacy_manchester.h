@@ -154,20 +154,20 @@ inline static int8_t Demanchestrate( uint32_t v )
 		uint8_t bit = (v>>i)&1;
 		if( bit != manch_last_state )
 		{
-			if( manch_last_bits_at_state > 7 ) return -2;
+			if( manch_last_bits_at_state > 7 ) return 1;
 //			if( bit ) ct1+=manch_last_bits_at_state; else ct0+=manch_last_bits_at_state;
 
 #ifdef BITTABLE
 			uint8_t l = bittable[manch_last_state * 8 + manch_last_bits_at_state];
-			if( HandleTransition( l ) < 0 ) return -1;
+			if( HandleTransition( l ) < 0 ) return 1;
 #else
 			if( manch_last_state )
 			{
-				if( HandleTransition( l > LAST_ONE_SHORT ) < 0 ) return -1;
+				if( HandleTransition( l > LAST_ONE_SHORT ) < 0 ) return 1;
 			}
 			else
 			{
-				if( HandleTransition( l > LAST_ZERO_SHORT ) < 0 ) return -1;
+				if( HandleTransition( l > LAST_ZERO_SHORT ) < 0 ) return 1;
 			}
 #endif
 
@@ -180,8 +180,20 @@ inline static int8_t Demanchestrate( uint32_t v )
 		}
 	}
 
-	if( manch_last_bits_at_state > 7 ) return -2;
+	if( manch_last_bits_at_state > 7 ) return 1;
 
 	return 0;
+}
+
+int8_t DecodePacket( uint32_t * dat, uint16_t len )
+{
+	int r, j;
+	for( j = 0; j < len; j++ ) 
+	{
+		r = Demanchestrate( dat[j] );
+		if( r != 0 )
+			break;
+	}
+	return r;
 }
 

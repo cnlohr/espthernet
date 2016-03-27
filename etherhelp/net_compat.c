@@ -101,8 +101,6 @@ void et_backend_tick_quick()
 #endif
 			ResetPacketInternal( dat[1] );
 
-
-
 			//This secton detects if a new packet is present and runs the demanchester code on it.
 
 			if( KeepNextPacket == 1 )
@@ -111,7 +109,7 @@ void et_backend_tick_quick()
 				g_process_paktime = system_get_time();
 			}
 
-			r = DecodePacket( dat, len );
+			r = DecodePacket( &dat[1], len-1 ); //Skip first byte.
 
 			if( KeepNextPacket == 1 )
 			{
