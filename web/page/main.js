@@ -725,10 +725,26 @@ function RunOnData()
 	{
 		var st1i = parseInt( state1ins[i], 16 );
 		var st1o = parseInt( state1outs[i], 16 );
-		divtext += "<TD STYLE='border:1px solid gray;" + (( state1or2[i] == 1 )?"background-color:green":( (state1or2[i] == 0 )?"background-color:black":"")) + "' COLSPAN=4>" + state1ins[i] + "<BR>" + ((st1i>>9)&1) + "<BR>" + ((st1i>>8)&1) +
-			"<BR>" + ((st1i>>5)&7) + "<BR>" + ((st1i>>4)&1) + "<BR>" + ((st1i)&15).toString(16) + "<BR><BR>" +
-			state1outs[i] + "<BR>" + ((st1o>>10)&1) + "<BR>" + ((st1o>>9)&1) + "<BR>" + ((st1o>>8)&1) + "<BR>" +
-			((st1o>>5)&7) + "<BR>" + ((st1o>>4)&1) + "<BR>" + (st1o&0x0f).toString(16) + "</TD>";
+		var outbitstext = "None";
+		var bitsofoutput = (st1o&0x0c)>>2;
+		if( bitsofoutput > 0 )
+		{
+			outbitstext = "Output: " + ((st1o&0x01)?"1":"0");
+		}
+		if( bitsofoutput > 1 )
+		{
+			outbitstext += " and " + ((st1o&0x02)?"1":"0");
+		}
+
+
+		divtext += "<TD STYLE='border:1px solid gray;" + 
+			(( state1or2[i] == 1 )?"background-color:green":( (state1or2[i] == 0 )?"background-color:black":"")) + "' COLSPAN=4><SPAN TITLE=TableIn>" +
+			state1ins[i] + "</SPAN><BR><SPAN title=Polarity>" + ((st1i>>9)&1) + "</SPAN><BR><SPAN title=LastBit>" + ((st1i>>8)&1) +
+			"</SPAN><BR><SPAN TITLE=Count>" + ((st1i>>5)&7) + "</SPAN><BR><SPAN TITLE=Intonation>" + ((st1i>>4)&1) +
+			"</SPAN><BR><SPAN TITLE=WireBits>" + ((st1i)&15).toString(16) + "<BR><BR><SPAN TITLE=TableOut>" +
+			state1outs[i] + "</SPAN><BR><SPAN TITLE=ExitPreamble>" + ((st1o>>10)&1) + "</SPAN><BR><SPAN TITLE=NewPolarity>" + ((st1o>>9)&1) +
+			"</SPAN><BR><SPAN TITLE=LastBitValue>" + ((st1o>>8)&1) + "</SPAN><BR><SPAN TITLE=Count>" + ((st1o>>5)&7) +
+			"</SPAN><BR><SPAN TITLE=Intonation>" + ((st1o>>4)&1) + "</SPAN><BR><SPAN TITLE='" + outbitstext + "'>" + (st1o&0x0f).toString(16) + "</SPAN></TD>";
 	}
 	divtext += "</TR>";
 
