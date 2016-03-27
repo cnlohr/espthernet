@@ -377,14 +377,13 @@ keep_searching:
 		{
 			uint32_t d = dat[i];
 
-			//Look for a set of 3 non null packets.
+			pk[(*len)++] = d;
+
 			if( d == 0xffffffff || d == 0x00000000 )
 			{
 				PacketStoreFlags[PacketStoreInSitu] = 2;
 				break;
 			}
-
-			pk[(*len)++] = d;
 
 			if( (*len) >= STOPKTSIZE )
 			{

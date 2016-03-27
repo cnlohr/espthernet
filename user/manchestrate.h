@@ -30,6 +30,7 @@ void ResetPacketInternal( uint32_t first );
 int8_t HandleWord32( uint32_t v ); //1 = Packet complete. Negative = Problem.  0 = Packet processing.
 int8_t VerifyEtherlinkCRC(); //-1 = FAIL.  0 = PASS.
 
+int8_t DecodePacket( uint32_t * pak, uint16_t len );
 
 #endif
 

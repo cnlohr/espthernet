@@ -42,7 +42,17 @@ td { vertical-align: top; }
 <input type=submit onclick="ShowHideEvent( 'LastPacket' ); KickLastPacket();" value="Last Packet" STYLE=""></td><td>
 <div id=LastPacket class="collapsible">
 
-<INPUT type=submit onclick="KickLastPacket();" value="Get Another" id="getanotherpak"> <INPUT type=checkbox id="errpak">Wait for error. <INPUT type=text id=pakdat alt="Tab deliminated format 0xabcdef00"> <INPUT type=submit onclick="RunOnScreenData();" value="Run on Data"> <INPUT type=submit onclick="LoadTestPack();" value="Load Test Pack"> <br>
+<TABLE WIDTH=10%>
+<TR>
+<TD><INPUT type=submit onclick="KickLastPacket();" value="Get Another" id="getanotherpak"></TD>
+<TD NOWRAP><DIV id="packettime"></DIV></TD>
+<TD NOWRAP><INPUT type=checkbox id="errpak">Wait for error.</TD>
+<TD><INPUT type=text id=pakdat alt="Tab deliminated format 0xabcdef00"></TD>
+<TD><INPUT type=submit onclick="RunOnScreenData();" value="Run on Data"></TD>
+<TD><INPUT type=submit onclick="LoadTestPack();" value="Load Test Pack"></TD>
+<TD WIDTH=100%> </TD>
+</TR>
+</TABLE>
 
 <INPUT type=checkbox id="RunNaive" checked onclick="UpdateValids();">Naive implementation<BR>
 <div id="NaiveArea" style="overflow-x:scroll;white-space:nowrap;">

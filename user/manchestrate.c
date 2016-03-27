@@ -111,7 +111,7 @@ inline static int8_t Demanchestrate( uint32_t v )
 
 		while( dataoutplace >= 8 )
 		{
-			((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = ( dataoutword & 0xff );
+			((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = dataoutword;
 			dataoutword >>= 8;
 			dataoutplace -= 8;
 		}
@@ -130,10 +130,36 @@ inline static int8_t Demanchestrate( uint32_t v )
 	}
 }
 
+int8_t DecodePacket( uint32_t * dat, uint16_t len )
+{
+	int r, j;
+	for( j = 1; j < len; j++ ) 
+	{
+		r = HandleWord32( dat[j] );
+		if( r != 0 )
+			break;
+	}
+
+	return r;
+}
+
 
 #else
 
 #include "legacy_manchester.h"
+
+
+int8_t DecodePacket( uint32_t * dat, uint16_t len )
+{
+	int r, j;
+	for( j = 1; j < len; j++ ) 
+	{
+		r = HandleWord32( dat[j] );
+		if( r != 0 )
+			break;
+	}
+	return r;
+}
 
 #endif
 

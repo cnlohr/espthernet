@@ -4,6 +4,8 @@
 #include <mystuff.h>
 #include <i2sduplex.h>
 
+extern uint32_t g_process_paktime;
+
 void ICACHE_FLASH_ATTR ReinitSettings()
 {
 }
@@ -42,7 +44,7 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 				gotpak = i+1;
 			}
 		}
-		buffend += ets_sprintf( buffend, "CL:%d", gotpak );
+		buffend += ets_sprintf( buffend, "CL:%d:%d", gotpak, g_process_paktime );
 		return buffend-buffer;
 	}
 

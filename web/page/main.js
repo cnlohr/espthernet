@@ -919,6 +919,7 @@ function CheckPacketLockStatus( req, data )
 		QueueOperation( "CL",  CheckPacketLockStatus );
 		return;
 	}
+	$("#packettime").html( "Took " + vs[2]+" us ESP Decode" );
 	$("#LastPacketBody").html("Downloading Packet..." );
 	PackPlace = 0;
 	Packet = [];

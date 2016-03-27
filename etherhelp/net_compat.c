@@ -12,6 +12,8 @@ unsigned short ETsendplace;
 uint16_t sendbaseaddress;
 unsigned short ETchecksum;
 
+uint32_t g_process_paktime;
+
 unsigned char MyMAC[6];
 unsigned char MyIP[4] = { 10, 1, 10, 5 };
 unsigned char MyMask[4] = { 255, 0, 0, 0 };
@@ -103,32 +105,17 @@ void et_backend_tick_quick()
 
 			//This secton detects if a new packet is present and runs the demanchester code on it.
 
-			uint32_t profiletime;
 			if( KeepNextPacket == 1 )
 			{
 				ets_intr_lock();
-				profiletime = system_get_time();
+				g_process_paktime = system_get_time();
 			}
 
-			for( j = 1; j < len; j++ ) 
-			{
-				r = HandleWord32( dat[j] );
-				if( r != 0 )
-				{
-					break;
-				}
-			}
-
-			//Flush out the buffer with the last bit.  I.e. if last bit is a 1 flush it out with 1's, otherwise 0's.
-			if( j == len && !r )
-			{
-				//XXX TODO set r = this IF AND ONLY IF we are doing the new method.
-				r = HandleWord32( (dat[len-1]&1)?0xffffffff:0x00000000 );
-			}
+			r = DecodePacket( dat, len );
 
 			if( KeepNextPacket == 1 )
 			{
-				profiletime = system_get_time() - profiletime;
+				g_process_paktime = system_get_time() - g_process_paktime;
 				ets_intr_unlock();
 			}
 
@@ -148,7 +135,6 @@ void et_backend_tick_quick()
 				PacketStoreFlags[i] = (KeepNextPacket==1)?3:0;
 				if( KeepNextPacket == 1 )
 				{
-					printf( "SPT: %dus\n", profiletime );
 					KeepNextPacket = 0;
 				}
 			}
