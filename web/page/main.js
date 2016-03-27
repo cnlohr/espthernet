@@ -80,12 +80,12 @@ function RunOnData()
 	var i;
 	var zero_bias = true;
 
-	divtext = "<TABLE STYLE='border:1px solid gray;border-collapse:collapse;'><TR><TD nowrap>Raw Hex</TD>";
+	divtext = "<TABLE STYLE='border:1px solid gray;border-collapse:collapse;background-color:#eeeeee'><TR><TD nowrap>Raw Hex</TD>";
 	var pdout = "";
 	for( i = 0; i < PacketHex.length; i++ )
 	{
 		var pk = PacketHex[i];
-		divtext += "<TD STYLE='border:1px solid gray;background-color:#ffffff' COLSPAN=32>" + pk + "</TD>";
+		divtext += "<TD STYLE='border:1px solid gray' COLSPAN=32>" + pk + "</TD>";
 		pdout += pk + "\t";
 	}
 	$("#pakdat").val( pdout );
@@ -520,15 +520,15 @@ function RunOnData()
 //   1 Bit = BIT 0\n\
 //   2 Bit = Nr of bits output.\n\
 //LSB\n\
-//NOTE: CHI/CHO is # of bits in chain.\n\
+//NOTE: CHI/CHO is # of bits in chain.\n\n\
 #ifndef ZERO_BIAS\n\
-#error This table was created specifically for a zero-bias system.\n\
+#error This table was created specifically for a bias-toward-zero system.\n\
 #endif\n\
 \n";
 	divtext += "uint16_t ManchesterTable1[1024] = {";
 	for( var i = 0; i < 1024; i++ )
 	{
-		if( (i & 31) == 0 ) divtext += "\n\t";
+		if( (i & 15) == 0 ) divtext += "\n\t";
 		divtext += "0x" + tohex12( Table1[i] ) + ", ";
 	}
 	divtext += "};\n\n";
@@ -702,11 +702,11 @@ function RunOnData()
 
 
 
-	divtext = "<TABLE STYLE='border:1px solid gray;border-collapse:collapse;'><TR><TD nowrap>Raw Hex</TD>";
+	divtext = "<TABLE STYLE='border:1px solid gray;border-collapse:collapse;background-color:#eeeeee'><TR><TD nowrap>Raw Hex</TD>";
 	for( i = 0; i < PacketHex.length; i++ )
 	{
 		var pk = PacketHex[i];
-		divtext += "<TD STYLE='border:1px solid gray;background-color:#ffffff' COLSPAN=32>" + pk + " (" + i + ")</TD>";
+		divtext += "<TD STYLE='border:1px solid gray;' COLSPAN=32>" + pk + " (" + i + ")</TD>";
 	}
 
 	divtext += "<TR><TD nowrap>Nibbles</TD>";

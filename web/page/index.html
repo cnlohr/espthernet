@@ -1,5 +1,5 @@
 <html>
-<!-- Copyright (C) 2015 <>< Charles Lohr, see LICENSE file for more info.
+<!-- Copyright (C) 2016 <>< Charles Lohr, see LICENSE file for more info.
 This particular file may be licensed under the MIT/x11, New BSD or ColorChord Licenses. -->
 <head>
 <title>espthernet console</title>
@@ -18,7 +18,7 @@ td { vertical-align: top; }
 </style>
 </head>
 <body>
-<h2>esp8266 10-base-T ethernet example</h2>
+<h2>espthernet console</h2>
 <hr>
 
 
@@ -33,7 +33,7 @@ td { vertical-align: top; }
 <table border=1><tr><td>
 <p>Welcome to the espthernet Web-based GUI.</p>
 <p>This GUI uses WebSockets, and has only been tested under the newest (as of March, 2016) Chrome and Firefox browsers.</p>
-<p>For more information about this project, visit it on github, here: <a href=https://github.com/cnlohr/channel3>https://github.com/cnlohr/channel3</a></p>
+<p>For more information about this project, visit it on github, here: <a href=https://github.com/cnlohr/espthernet>https://github.com/cnlohr/espthernet</a></p>
 </div></td></tr></table></td></tr>
 
 
@@ -43,11 +43,13 @@ td { vertical-align: top; }
 
 <INPUT type=submit onclick="KickLastPacket();" value="Get Another"> <INPUT type=checkbox id="errpak">Wait for error. <INPUT type=text id=pakdat alt="Tab deliminated format 0xabcdef00"> <INPUT type=submit onclick="RunOnScreenData();" value="Run on Data"> <br>
 
+Naive implementation<BR>
 <div style="overflow-x:scroll;white-space:nowrap;">
 <div id="LastPacketBody" style="display:inline-block;width:600px;white-space:normal;">
 </div>
 </div>
 <BR>
+Simulation of table-based implementation<BR>
 <div style="overflow-x:scroll;white-space:nowrap;">
 <div id="LastPacketBody2" style="display:inline-block;width:600px;white-space:normal;">
 !!!!!!!!
@@ -55,8 +57,9 @@ td { vertical-align: top; }
 </div>
 <BR>
 
-<div style="overflow-x:scroll;white-space:nowrap;">
-<div id="TablesText" style="display:inline-block;width:600px;white-space:normal;">
+Header file used for table-based simulation<BR>
+<div style="overflow-x:scroll;white-space:nowrap;height:200;background-color:#eeeeee">
+<div id="TablesText" style="display:inline-block;width:600px;white-space:normal">
 !!!!!!!!
 </div>
 </div>

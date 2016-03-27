@@ -74,7 +74,6 @@ LINKFLAGS:= \
 $(TARGET_OUT) : $(SRCS)
 	$(PREFIX)gcc $(CFLAGS) $^  $(LINKFLAGS) -o $@
 	nm -S -n $(TARGET_OUT) > image.map
-	#$(PREFIX)gcc -S $(CFLAGS) $^  $(LINKFLAGS) >  image.lst
 	$(PREFIX)objdump -S $@ > image.lst
 
 $(FW_FILE_1): $(TARGET_OUT)
