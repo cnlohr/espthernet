@@ -41,26 +41,24 @@ td { vertical-align: top; }
 <input type=submit onclick="ShowHideEvent( 'LastPacket' ); KickLastPacket();" value="Last Packet"></td><td>
 <div id=LastPacket class="collapsible">
 
-<INPUT type=submit onclick="KickLastPacket();" value="Get Another"> <INPUT type=checkbox id="errpak">Wait for error. <INPUT type=text id=pakdat alt="Tab deliminated format 0xabcdef00"> <INPUT type=submit onclick="RunOnScreenData();" value="Run on Data"> <br>
+<INPUT type=submit onclick="KickLastPacket();" value="Get Another"> <INPUT type=checkbox id="errpak">Wait for error. <INPUT type=text id=pakdat alt="Tab deliminated format 0xabcdef00"> <INPUT type=submit onclick="RunOnScreenData();" value="Run on Data"> <INPUT type=submit onclick="LoadTestPack();" value="Load Test Pack"> <br>
 
-Naive implementation<BR>
+<INPUT type=checkbox id="RunNaive" checked>Naive implementation<BR>
 <div style="overflow-x:scroll;white-space:nowrap;">
 <div id="LastPacketBody" style="display:inline-block;width:600px;white-space:normal;">
 </div>
 </div>
 <BR>
-Simulation of table-based implementation<BR>
+<INPUT type=checkbox id="RunSim">Simulation of table-based implementation<BR>
 <div style="overflow-x:scroll;white-space:nowrap;">
 <div id="LastPacketBody2" style="display:inline-block;width:600px;white-space:normal;">
-!!!!!!!!
 </div>
 </div>
 <BR>
 
-Header file used for table-based simulation<BR>
+<INPUT type=checkbox id="RunTable">Header file used for table-based simulation<BR>
 <div style="overflow-x:scroll;white-space:nowrap;height:200;background-color:#eeeeee">
 <div id="TablesText" style="display:inline-block;width:600px;white-space:normal">
-!!!!!!!!
 </div>
 </div>
 
