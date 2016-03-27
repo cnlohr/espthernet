@@ -1,1 +1,4 @@
-.h linguist-language=C
+*.h linguist-language=C
+web/page/jquery-2.1.4.min.js linguist-documentation=false
+
+
