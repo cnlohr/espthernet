@@ -42,6 +42,18 @@ function LoadTestPack()
 	RunOnScreenData()
 }
 
+function UpdateValids()
+{
+    $("#getanotherpak").prop("disabled",!commsup);
+    $("#errpak").prop("disabled",!commsup);
+
+
+	if( document.getElementById('RunNaive').checked ) $("#NaiveArea").show(); else $("#NaiveArea").hide();
+	if( document.getElementById('RunSim').checked ) $("#SimArea").show(); else $("#SimArea").hide();
+	if( document.getElementById('RunTable').checked ) $("#TableArea").show(); else $("#TableArea").hide();
+	
+}
+
 function FlipBits( word, bit )
 {
 	var pd = $("#pakdat").val();

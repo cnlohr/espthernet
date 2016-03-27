@@ -195,6 +195,8 @@ function Ticker()
 		time_since_hz = 0;
 		$('#SystemStatusClicker').prop( "value", "System " + lasthz + "Hz" );
 	}
+
+	UpdateValids();
 }
 
 
