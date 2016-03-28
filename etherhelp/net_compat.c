@@ -19,6 +19,7 @@ unsigned char MyMAC[6];
 unsigned char MyIP[4] = { 10, 1, 10, 5 };
 unsigned char MyMask[4] = { 255, 0, 0, 0 };
 
+int pendingnlp = 0;
 
 //Internal functs
 
@@ -183,6 +184,9 @@ g_process_paktime += system_get_time();
 void et_backend_tick_quick()
 {
 	int i;
+	if( pendingnlp )
+		SendNLP();
+
 	for( i = 0; i < RXBUFS; i++ )
 	{
 		if( rx_pack_flags[i] != 2 ) continue;
@@ -300,6 +304,11 @@ ICACHE_FLASH_ATTR void SendNLP()
 	if( i2stxdone )
 	{
 		SendI2SPacket( nlpsend, sizeof( nlpsend ) / 4 );
+		pendingnlp = 0;
+	}
+	else
+	{
+		pendingnlp = 1;
 	}
 }
 

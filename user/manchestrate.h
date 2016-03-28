@@ -4,9 +4,6 @@
 #include <c_types.h>
 #include <eth_config.h>
 
-//Do this to use a table-based manchester approach.  It is significantly faster, but takes 2kB of ram.
-#define TABLE_BASED
-
 //Assuming operating frequency of 40 MHz.
 //It must have a BIAS.  If BIAS is toward 0, set ZERO_BIAS
 #define ZERO_BIAS
@@ -34,7 +31,7 @@ int8_t VerifyEtherlinkCRC(); //-1 = FAIL.  0 = PASS.
 // + = suspected error or end of packet.  Return is # of bytes read.
 // 0 = Give me more data.
 //Progress not updated on data continuation.
-int8_t DecodePacket( uint32_t * pak, uint16_t len );
+int32_t DecodePacket( uint32_t * pak, uint16_t len );
 
 #endif
 

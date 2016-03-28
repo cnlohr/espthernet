@@ -4,8 +4,6 @@
 
 //The code up here is for decoding manchester encoded packets.
 
-#ifdef TABLE_BASED
-
 #include "demanchestrate_table.h"
 
 uint16_t  gl_state1;
@@ -56,7 +54,7 @@ int ResetPacketInternal()
 //Return 0 of bytes read if good.
 
 //inline static int8_t Demanchestrate( uint32_t v )
-int8_t DecodePacket( uint32_t * dat, uint16_t len )
+int32_t DecodePacket( uint32_t * dat, uint16_t len )
 {
 	//XXX TRICKY: GCC does an extra operation to downconvert to bits when operating with this value.  It is safe to leave as a 32-bit value.
 	//This applies to "nibble" and  "dataoutplace"
@@ -65,7 +63,7 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 	uint8_t   in_preamble = gl_in_preamble;
 	int32_t nibble = 28;
 	uint32_t v;
-	uint16_t k = 0;
+	uint32_t k = 0;
 
 	uint32_t dataoutword = gl_dataoutword;
 	uint32_t dataoutplace = gl_dataoutplace; 
@@ -234,13 +232,6 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 	}
 
 }
-#endif
-
-#else
-
-#include "legacy_manchester.h"
-
-#endif
 
 
 

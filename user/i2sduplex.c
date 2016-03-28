@@ -346,7 +346,6 @@ keep_going:
 			{
 				PacketStoreInSitu = 0;
 				gotlink = 1;
-				i++;
 				stripe = 1;
 				break;
 			}
@@ -474,7 +473,7 @@ keep_going:
 
 	//TODO: Figure out why us trying to keep going here messes everything up.
 	//Should be able to dump off whatever bytes were consumed and keep going.
-	return;
+	goto keep_going;
 }
 
 
