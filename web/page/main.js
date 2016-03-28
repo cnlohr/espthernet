@@ -549,6 +549,8 @@ function RunOnData()
 		cho = invalid?7:bitct;
 		intonout = inton;
 
+		if( invalid ) wouldexitpreamble = true;
+
 		var upperlast = (newbits&1)?1:0;
 		var code = cho<<5;
 		code |= (intonout?1:0)<<4;

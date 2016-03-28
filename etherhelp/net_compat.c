@@ -7,7 +7,8 @@
 
 void SendNLP();
 
-unsigned char ETbuffer[ETBUFFERSIZE] __attribute__((aligned(32)));
+unsigned char ETbuffer[ETBUFFERSIZE+RX_BUFFER_SIZE] __attribute__((aligned(32)));
+
 unsigned short ETsendplace;
 uint16_t sendbaseaddress;
 unsigned short ETchecksum;
@@ -62,6 +63,7 @@ ICACHE_FLASH_ATTR uint16_t internet_checksum( const unsigned char * start, uint1
 }
 
 
+#if 0
 void et_backend_tick_quick()
 {
 	int i;
@@ -76,7 +78,6 @@ void et_backend_tick_quick()
 			}
 		}
 	}
-
 
 	for( i = 0; i < STOPKT; i++ )
 	{
@@ -170,6 +171,41 @@ void et_backend_tick_quick()
 		}
 	}
 }
+
+#else
+
+void et_backend_tick_quick()
+{
+	int i;
+	for( i = 0; i < RXBUFS; i++ )
+	{
+		if( rx_pack_flags[i] != 2 ) continue;
+
+		uint16_t byr = rx_pack_lens[i];
+		uint16_t sendplace = PTR_TO_RX_BUF(i);
+
+		uint32_t cmpcrc = crc32b( 0, ETbuffer+sendplace, byr - 4 );
+
+		uint32_t checkcrc = (ETbuffer[sendplace+byr-1] << 24)|(ETbuffer[sendplace+byr-2] << 16)|(ETbuffer[sendplace+byr-3] << 8)|(ETbuffer[sendplace+byr-4]);
+
+		if( cmpcrc == checkcrc )
+		{
+			//If you ever get to this code, a miracle has happened.
+			//Pray that many more continue.
+			ETsendplace = sendplace;
+			et_receivecallback( byr - 4 );
+		}
+		else
+		{
+			printf( "CRCERR\n" );
+		}
+
+		rx_pack_flags[i] = 0; //Release packet.
+	}
+}
+
+
+#endif
 
 ICACHE_FLASH_ATTR void et_backend_tick_slow()
 {

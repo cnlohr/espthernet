@@ -6,7 +6,6 @@
 
 #ifdef TABLE_BASED
 
-
 #include "demanchestrate_table.h"
 
 uint16_t  gl_state1;
@@ -14,15 +13,40 @@ uint8_t   gl_in_preamble;
 uint32_t  gl_dataoutword;
 uint8_t   gl_dataoutplace;
 int16_t   current_packet_rec_place;
+uint8_t * current_packet;
 
+uint8_t  rx_cur;
+//uint8_t  rx_pack_data[RXBUFS*MAX_FRAMELEN];
+uint16_t rx_pack_lens[RXBUFS];
+uint8_t  rx_pack_flags[RXBUFS];
 
-void ResetPacketInternal( uint32_t first )
+int ResetPacketInternal()
 {
+	int i;
+
+	if( rx_pack_flags[rx_cur] != 2 )
+	{
+		rx_pack_flags[rx_cur] = 0;
+	}
+
+	for( i = 0; i < RXBUFS; i++ )
+	{ 
+		if( rx_pack_flags[i] == 0 ) break;
+	}
+
+	if( i == RXBUFS ) return -1;
+
+	rx_pack_flags[i] = 1;
+ 	current_packet = &ETbuffer[PTR_TO_RX_BUF(i)];
+	rx_cur = i;
+
 	gl_state1 = 0;
 	gl_in_preamble = 2;
 	current_packet_rec_place = 0;
 	gl_dataoutword = 0;
 	gl_dataoutplace = 0;
+
+	return i;
 }
 
 
@@ -63,6 +87,7 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 			//Faulty data.
 			gl_state1 = state1;
 			gl_in_preamble = in_preamble;
+			rx_pack_flags[rx_cur] = 0;
 			return -6;
 		}
 
@@ -159,11 +184,13 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 			//It is possible that we might be a byte behind at some point.  That is okay.  We'll do another check before being done.
 			if( dataoutplace >= 8 )
 			{
+				if( lcl_current_packet_rec_place >= MAX_FRAMELEN ) return -6;
 				((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = dataoutword;
 				dataoutword >>= 8;
 				dataoutplace -= 8;
 			}
 
+			//End of data (may be good or bad)
 			if( (state1 & 0xE0) == 0xE0 )
 			{
 				gl_dataoutword = dataoutword;
@@ -172,17 +199,32 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 				gl_state1 = state1;
 
 				//If we're a byte behind, take it out here.
-				if( dataoutplace >= 8 )
+				//Does this need to be a while????
+				while( dataoutplace >= 8 )
 				{
+					if( lcl_current_packet_rec_place >= MAX_FRAMELEN ) return -6;
 					((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = dataoutword;
 					dataoutword >>= 8;
 					dataoutplace -= 8;
 				}
 
-				return 1;
+				rx_pack_lens[rx_cur] = lcl_current_packet_rec_place;
+				if( current_packet_rec_place > 9 )
+				{
+					//Probs a good packet?
+					rx_pack_flags[rx_cur] = 2;
+					return 1;
+				}
+				else
+				{
+					//Super runt packet (def bad)
+					rx_pack_flags[rx_cur] = 0;
+					return -1;
+				}
 			}
 		}
 
+		//More data is to come.
 		gl_dataoutword = dataoutword;
 		gl_dataoutplace = dataoutplace;
 		current_packet_rec_place = lcl_current_packet_rec_place;

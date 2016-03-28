@@ -17,6 +17,12 @@
 
 
 
+#define RXBUFS 2
+#define PTR_TO_RX_BUF( x ) ( ETBUFFERSIZE + x * MAX_FRAMELEN )
+#define RX_BUFFER_SIZE (RXBUFS*MAX_FRAMELEN)
+extern unsigned char ETbuffer[ETBUFFERSIZE+RX_BUFFER_SIZE] __attribute__((aligned(32)));
+
+
 #endif
 
 /*

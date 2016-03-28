@@ -16,20 +16,19 @@ void SendPacketData( const unsigned char * c, uint16_t len );
 //0: Normal decode operation.
 //1: Does not actually decode packet, rather places raw manchester data in payload.
 //2: Do not receive any more packets for now.
-//extern uint32_t current_packet[(MTU_BYTES+3)/4];
-extern unsigned char ETbuffer[ETBUFFERSIZE] __attribute__((aligned(32)));
-#define current_packet ETbuffer
+extern uint8_t * current_packet;
 extern int16_t current_packet_rec_place;
+
+extern uint16_t rx_pack_lens[RXBUFS];
+extern uint8_t  rx_pack_flags[RXBUFS]; //0 = unused, 1 = in transit, 2 = complete.
 
 extern uint32_t packsrxraw;
 extern uint8_t gotdma;
 extern uint8_t gotlink;
 
 //"newdata" must be in MSB first format.
-void ResetPacketInternal( uint32_t first );
-int8_t HandleWord32( uint32_t v ); //1 = Packet complete. Negative = Problem.  0 = Packet processing.
+int ResetPacketInternal( );  //First is currently unused.  If nonzero, failed.
 int8_t VerifyEtherlinkCRC(); //-1 = FAIL.  0 = PASS.
-
 int8_t DecodePacket( uint32_t * pak, uint16_t len );
 
 #endif

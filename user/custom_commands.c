@@ -28,7 +28,8 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 
 	case 'K': case 'k':		//Capture packet
 	{
-		KeepNextPacket = my_atoi( pusrdata+2 );
+		PacketStoreLength = 0;
+		KeepNextPacket = my_atoi( pusrdata+2 ); //2 = regular cap, 3 = on error???
 		buffend += ets_sprintf( buffend, "CK" );
 		return buffend-buffer;
 	}
@@ -37,14 +38,8 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 	{
 		int i;
 		int gotpak = 0;
-		for( i = 0 ; i < STOPKT; i++ )
-		{
-			if( PacketStoreFlags[i] == 3 )
-			{
-				gotpak = i+1;
-			}
-		}
-		buffend += ets_sprintf( buffend, "CL:%d:%d", gotpak, g_process_paktime );
+		if( KeepNextPacket == 4 ) gotpak = 1;
+		buffend += ets_sprintf( buffend, "CL:%d:%d", gotpak, 0 );
 		return buffend-buffer;
 	}
 
@@ -59,13 +54,8 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 			return buffend-buffer;
 		}
 		wordofs = my_atoi(&pusrdata[3]);
-		for( i = 0 ; i < STOPKT; i++ )
-		{
-			if( PacketStoreFlags[i] == 3 )
-			{
-				gotpak = i+1;
-			}
-		}
+
+		if( KeepNextPacket == 4 ) gotpak = 1;
 
 		if( !gotpak ) 
 		{
@@ -73,11 +63,11 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 			return buffend-buffer;
 		}
 
-		buffend += ets_sprintf( buffend, "CM:%d:32:%d:",wordofs,PacketStoreLength[(gotpak-1)] );
+		buffend += ets_sprintf( buffend, "CM:%d:32:%d:",wordofs,PacketStoreLength );
 
 		for( i = 0; i < 32; i++ )
 		{
-			uint32_t r = PacketStore[STOPKTSIZE * (gotpak-1)+wordofs+i];
+			uint32_t r = PacketStore[wordofs+i];
 			*(buffend++) = tohex1((r>>28)&15);
 			*(buffend++) = tohex1((r>>24)&15);
 			*(buffend++) = tohex1((r>>20)&15);
@@ -96,14 +86,8 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 	{
 		int i;
 		int gotpak = 0;
-		for( i = 0 ; i < STOPKT; i++ )
-		{
-			if( PacketStoreFlags[i] == 3 )
-			{
-				PacketStoreFlags[i] = 0;
-				gotpak = i+1;
-			}
-		}
+		KeepNextPacket = 0;
+		if( KeepNextPacket == 4 ) gotpak = 1;
 		if( gotpak )
 		{
 			buffend += ets_sprintf( buffend, "CN" );

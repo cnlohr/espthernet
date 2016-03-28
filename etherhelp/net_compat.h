@@ -12,9 +12,10 @@
 #include "mystuff.h"
 #include <c_types.h>
 
+
 //You must define 'mymac'
 extern unsigned char MyMAC[6];
-extern unsigned char ETbuffer[ETBUFFERSIZE] __attribute__((aligned(32)));
+extern unsigned char ETbuffer[ETBUFFERSIZE+RX_BUFFER_SIZE] __attribute__((aligned(32)));
 extern unsigned short ETsendplace;
 //For telling where the current transaction started.
 extern uint16_t sendbaseaddress;
