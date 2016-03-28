@@ -34,25 +34,31 @@ void ResetPacketInternal( uint32_t first )
 //inline static int8_t Demanchestrate( uint32_t v )
 int8_t DecodePacket( uint32_t * dat, uint16_t len )
 {
+	//XXX TRICKY: GCC does an extra operation to downconvert to bits when operating with this value.  It is safe to leave as a 32-bit value.
+	//This applies to "nibble" and  "dataoutplace"
+
 	uint16_t  state1 = gl_state1;
 	uint8_t   in_preamble = gl_in_preamble;
-	int8_t nibble = 28;
+	int32_t nibble = 28;
 	uint32_t v;
 	uint16_t k = 0;
-	uint8_t i;
+
+	uint32_t dataoutword = gl_dataoutword;
+	uint32_t dataoutplace = gl_dataoutplace; 
 
 	if( in_preamble == 2 )
 	{
-		v = dat[k];
+		v = dat[0];
 
 		//Deal with the pre-preamble
 		uint8_t b0 = v&1; //Most recent bit.
-		for( i = 1; i < 32; i++ )
+		//Not actually nibble, re-pruposed.
+		for( nibble = 1; nibble < 32; nibble++ )
 		{
-			if( ((v>>i)&1) != b0 ) break;
+			if( ((v>>nibble)&1) != b0 ) break;
 		}
 
-		if( i > 6 )
+		if( nibble > 6 )
 		{
 			//Faulty data.
 			gl_state1 = state1;
@@ -60,8 +66,9 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 			return -6;
 		}
 
-		state1 = (1<<9) | ((v&1)<<8) | ( (i-1) << 5 );
+		state1 = (1<<9) | ((v&1)<<8) | ( (nibble-1) << 5 );
 		in_preamble = 1;
+		nibble = 28;
 		k = 1;
 	}
 
@@ -75,7 +82,6 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 			{
 				state1 |= (v>>nibble)&0x0f;
 				state1 = ManchesterTable1[state1];
-
 				if( (state1 & 0x400) )  //Break in the preamble!
 				{
 					state1 &= 0x3f0;
@@ -103,19 +109,8 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 			gl_state1 = state1;
 			return 0;
 		}
-	}
 
-	gl_in_preamble = in_preamble;
 
-	//Not in premable, this does actual packet decoding.
-	{
-		uint32_t dataoutword = gl_dataoutword;
-		uint8_t dataoutplace = gl_dataoutplace;
-		uint16_t lcl_current_packet_rec_place = current_packet_rec_place;
-
-		for( ; k < len; k++ )
-		{
-			v = dat[k];
 
 #define nibblet( x )\
 				state1 |= (v>>x)&0x0f;\
@@ -124,29 +119,45 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 				dataoutplace += (state1>>2)&3;\
 				state1 &= 0x3f0;\
 
-			switch( nibble )
-			{
-			case 28:nibblet(28);
-			case 24:nibblet(24);
-			case 20:nibblet(20);
-			case 16:nibblet(16);
-			case 12:nibblet(12);
-			case 8:nibblet(8);
-			case 4:nibblet(4);
-			case 0:nibblet(0);
-			}
+		//Since we hit the end of the preamble, we have to finish out the
+		//32-bit word...  We do that here.
+		switch( nibble )
+		{
+		case 28:nibblet(28);
+		case 24:nibblet(24);
+		case 20:nibblet(20);
+		case 16:nibblet(16);
+		case 12:nibblet(12);
+		case 8:nibblet(8);
+		case 4:nibblet(4);
+		case 0:nibblet(0);
+		}
 
-/*			//Regular in-packet.
-			for( ; nibble >= 0; nibble-=4 )
-			{
-				state1 |= (v>>nibble)&0x0f;
-				state1 = ManchesterTable1[state1];
-				dataoutword |= (state1&3)<<dataoutplace;
-				dataoutplace += (state1>>2)&3;
-				state1 &= 0x3f0;
-			}*/
+		k++;
+	}
 
-			while( dataoutplace >= 8 )
+	gl_in_preamble = in_preamble;
+
+
+	//Not in premable, this does actual packet decoding.
+	{
+		uint16_t lcl_current_packet_rec_place = current_packet_rec_place;
+
+		for( ; k < len; k++ )
+		{
+			v = dat[k];
+
+			nibblet(28);
+			nibblet(24);
+			nibblet(20);
+			nibblet(16);
+			nibblet(12);
+			nibblet(8);
+			nibblet(4);
+			nibblet(0);
+
+			//It is possible that we might be a byte behind at some point.  That is okay.  We'll do another check before being done.
+			if( dataoutplace >= 8 )
 			{
 				((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = dataoutword;
 				dataoutword >>= 8;
@@ -159,10 +170,17 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 				gl_dataoutplace = dataoutplace;
 				current_packet_rec_place = lcl_current_packet_rec_place;
 				gl_state1 = state1;
+
+				//If we're a byte behind, take it out here.
+				if( dataoutplace >= 8 )
+				{
+					((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = dataoutword;
+					dataoutword >>= 8;
+					dataoutplace -= 8;
+				}
+
 				return 1;
 			}
-
-			nibble = 28;
 		}
 
 		gl_dataoutword = dataoutword;
