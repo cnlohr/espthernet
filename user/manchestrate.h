@@ -18,9 +18,9 @@ void SendPacketData( const unsigned char * c, uint16_t len );
 //2: Do not receive any more packets for now.
 extern uint8_t * current_packet;
 extern int16_t current_packet_rec_place;
-
 extern uint16_t rx_pack_lens[RXBUFS];
 extern uint8_t  rx_pack_flags[RXBUFS]; //0 = unused, 1 = in transit, 2 = complete.
+extern uint8_t rx_cur;
 
 extern uint32_t packsrxraw;
 extern uint8_t gotdma;
@@ -29,6 +29,11 @@ extern uint8_t gotlink;
 //"newdata" must be in MSB first format.
 int ResetPacketInternal( );  //First is currently unused.  If nonzero, failed.
 int8_t VerifyEtherlinkCRC(); //-1 = FAIL.  0 = PASS.
+
+//return vales:
+// + = suspected error or end of packet.  Return is # of bytes read.
+// 0 = Give me more data.
+//Progress not updated on data continuation.
 int8_t DecodePacket( uint32_t * pak, uint16_t len );
 
 #endif

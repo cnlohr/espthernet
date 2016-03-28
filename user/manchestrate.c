@@ -88,7 +88,7 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 			gl_state1 = state1;
 			gl_in_preamble = in_preamble;
 			rx_pack_flags[rx_cur] = 0;
-			return -6;
+			return 0;
 		}
 
 		state1 = (1<<9) | ((v&1)<<8) | ( (nibble-1) << 5 );
@@ -128,6 +128,8 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 			nibble = 28;
 		}
 
+
+		//Didn't leave preamble, but no more data left.
 		if( k == len )
 		{
 			gl_in_preamble = in_preamble;
@@ -184,7 +186,7 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 			//It is possible that we might be a byte behind at some point.  That is okay.  We'll do another check before being done.
 			if( dataoutplace >= 8 )
 			{
-				if( lcl_current_packet_rec_place >= MAX_FRAMELEN ) return -6;
+				if( lcl_current_packet_rec_place >= MAX_FRAMELEN ) { rx_pack_flags[rx_cur] = 0; return k+1; }
 				((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = dataoutword;
 				dataoutword >>= 8;
 				dataoutplace -= 8;
@@ -202,7 +204,7 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 				//Does this need to be a while????
 				while( dataoutplace >= 8 )
 				{
-					if( lcl_current_packet_rec_place >= MAX_FRAMELEN ) return -6;
+					if( lcl_current_packet_rec_place >= MAX_FRAMELEN ) { rx_pack_flags[rx_cur] = 0; return k+1; }
 					((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = dataoutword;
 					dataoutword >>= 8;
 					dataoutplace -= 8;
@@ -213,14 +215,13 @@ int8_t DecodePacket( uint32_t * dat, uint16_t len )
 				{
 					//Probs a good packet?
 					rx_pack_flags[rx_cur] = 2;
-					return 1;
 				}
 				else
 				{
 					//Super runt packet (def bad)
 					rx_pack_flags[rx_cur] = 0;
-					return -1;
 				}
+				return k+1;
 			}
 		}
 

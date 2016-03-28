@@ -119,6 +119,12 @@ void et_backend_tick_quick()
 			}
 
 
+extern uint32_t g_process_paktime;
+
+g_process_paktime -= system_get_time();
+g_process_paktime += system_get_time();
+
+
 
 
 
@@ -197,7 +203,14 @@ void et_backend_tick_quick()
 		}
 		else
 		{
-			printf( "CRCERR\n" );
+
+			//If we're debugging, be sure to capture this packet as a failure.
+			if( KeepNextPacket == 2 )
+			{
+				KeepNextPacket = 4;
+			}
+
+			printf( "!CRC\n" );
 		}
 
 		rx_pack_flags[i] = 0; //Release packet.
@@ -231,7 +244,7 @@ static volatile os_timer_t nlp_timer;
 
 #ifdef FULL_DUPLEX_FLP
 
-//Full-duplex link.
+//Full-duplex link.  (DOES NOT WORK)
 
 //XXX TODO This functionality doesn't actually work.
 //It likely has to do with timing inaccuracies, but I don't have

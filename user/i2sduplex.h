@@ -17,7 +17,7 @@
 // 40 MHz allows us to operate at full duplex.
 
 #define DMABUFFERDEPTH 3
-#define I2SDMABUFLEN (128)
+#define I2SDMABUFLEN (64)
 #define RX_NUM (I2SDMABUFLEN)
 #define LINE32LEN I2SDMABUFLEN
 

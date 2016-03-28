@@ -29,7 +29,8 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 	case 'K': case 'k':		//Capture packet
 	{
 		PacketStoreLength = 0;
-		KeepNextPacket = my_atoi( pusrdata+2 ); //2 = regular cap, 3 = on error???
+		KeepNextPacket = my_atoi( pusrdata+2 ); //2 = wait for error, 1 = just next packet.
+		g_process_paktime = 0;
 		buffend += ets_sprintf( buffend, "CK" );
 		return buffend-buffer;
 	}
@@ -39,7 +40,7 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 		int i;
 		int gotpak = 0;
 		if( KeepNextPacket == 4 ) gotpak = 1;
-		buffend += ets_sprintf( buffend, "CL:%d:%d", gotpak, 0 );
+		buffend += ets_sprintf( buffend, "CL:%d:%d", gotpak, g_process_paktime );
 		return buffend-buffer;
 	}
 
@@ -63,7 +64,7 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 			return buffend-buffer;
 		}
 
-		buffend += ets_sprintf( buffend, "CM:%d:32:%d:",wordofs,PacketStoreLength );
+		buffend += ets_sprintf( buffend, "CM:%d:32:%d:",wordofs,PacketStoreLength+1 );
 
 		for( i = 0; i < 32; i++ )
 		{

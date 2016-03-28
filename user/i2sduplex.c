@@ -7,6 +7,7 @@
 #include "pin_mux_register.h"
 #include <dmastuff.h>
 #include "i2sduplex.h"
+#include "manchestrate.h"
 
 //These contol the speed at which the bus comms.
 #define WS_I2S_BCK 2  //Can't be less than 2, if you want to RX
@@ -21,6 +22,7 @@ uint32_t i2sBDTX[I2STXZERO];
 uint8_t gotdma;
 uint8_t gotlink;
 
+extern uint32_t g_process_paktime;
 
 volatile uint32_t last_unknown_int;
 int fxcycle;
@@ -110,24 +112,34 @@ LOCAL void slc_isr(void) {
 	{
 		finishedDesc=(struct sdio_queue*)READ_PERI_REG(SLC_TX_EOF_DES_ADDR);
 
+//XXX WARNING Why does undeflow detection not work!?!?
+#ifdef DETECT_UNDERFLOWS
+		static int8_t expected_next = 1;
+		int8_t mep1 = (finishedDesc->unused + 1) % DMABUFFERDEPTH;
+		int8_t i = expected_next;
+		if( i != mep1 ) printf( "Underflow.\n" );
+		expected_next = mep1;
+#endif
+
 		GotNewData( (uint32_t*) finishedDesc->buf_ptr, I2SDMABUFLEN );
+		erx++;
 		finishedDesc->owner=1;
 
+
 		//Don't know why - but this MUST be done, otherwise everything comes to a screeching halt.
-
 		slc_intr_status &= ~SLC_TX_EOF_INT_ST;
-
-		erx++;
 	}
 	if( slc_intr_status & SLC_TX_DSCR_ERR_INT_ST ) //RX Fault, maybe owner was not set fast enough?
 	{
 		KickRX();
+		printf( "RXFault\n" );
 		slc_intr_status &= ~SLC_TX_DSCR_ERR_INT_ST;
 		last_unknown_int++;
 	}
 	if( slc_intr_status )
 	{
 		last_unknown_int = slc_intr_status;
+		printf( "UI:%08x\n", last_unknown_int );
 	}
 
 
@@ -344,7 +356,10 @@ keep_going:
 		if( PacketStoreInSitu ) return;
 	}
 
-	//Otherwise we're looking for 3 d's
+
+#define MINIMUM_IN_ROW_NONZERO 6
+
+	//Otherwise we're looking for several non-zero packets in a row.
 	if( PacketStoreInSitu == 0 )
 	{
 		//Quescent state.
@@ -363,7 +378,7 @@ keep_going:
 				stripe = 0;
 			}
 
-			if( stripe == 3 )
+			if( stripe == MINIMUM_IN_ROW_NONZERO )
 			{
 				PacketStoreInSitu = 1;
 				break;
@@ -375,7 +390,6 @@ keep_going:
 			return;
 
 		//Something happened... 
-		i++;
 
 		r = ResetPacketInternal(1);
 
@@ -388,12 +402,49 @@ keep_going:
 		}
 
 		//Good to go and start processing data.
+
+
+		if( KeepNextPacket > 0 && KeepNextPacket < 3 )
+		{
+			PacketStoreLength = 0;
+			g_process_paktime = 0;
+		}
+	}
+
+	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
+	{
+		int start;
+		if( i != 0 )
+		{
+			//Starting a packet.	
+			start = i-MINIMUM_IN_ROW_NONZERO;
+			if( start < 0 ) start = 0;
+		}
+		else
+		{
+			//Middle of packet
+			start = i;
+		}
+
+		int k;
+		for( k = start; k < datlen && PacketStoreLength < STOPKTSIZE; k++ )
+		{
+			PacketStore[PacketStoreLength++] = dat[k];
+		}
+
+		g_process_paktime -= system_get_time();
 	}
 
 	//Start processing a packet.
 	if( i < datlen )
 	{
 		r = DecodePacket( &dat[i], datlen - i );
+	}
+	i += r;
+
+	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
+	{
+		g_process_paktime += system_get_time();
 	}
 
 	//Done with this segment, next one to come.
@@ -403,12 +454,27 @@ keep_going:
 		return;
 	}
 
-	//Packet is complete, or error in packet.
+	//Packet is complete, or error in packet.  No matter what, we have to finish off the packet next time.
 	PacketStoreInSitu = -1;
 
+	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
+	{
+		int trim = (datlen-r);
+		trim--;
+		if( trim < 0 ) trim = 0;
+		if( trim > PacketStoreLength - 10 ) trim = (PacketStoreLength-10);
+		PacketStoreLength -= trim;
+
+		//Only release if packet not waiting for clear.
+		if( KeepNextPacket == 1 ) KeepNextPacket = 4;
+
+		//Packet knowingly faulted and we were waiting for packet?
+		if( KeepNextPacket == 2 && rx_pack_flags[rx_cur] == 0 ) { KeepNextPacket = 4; }
+	}
+
+	//TODO: Figure out why us trying to keep going here messes everything up.
+	//Should be able to dump off whatever bytes were consumed and keep going.
 	return;
-//Can't keep going, since we don't know how far DecodePacket read.
-//	goto keep_going;
 }
 
 
