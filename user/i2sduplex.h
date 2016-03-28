@@ -39,6 +39,7 @@ void ICACHE_FLASH_ATTR SendI2SPacket( uint32_t * pak, uint16_t dwords );
 
 //For storing packets when they come in, so they can be processed in the main loop.
 
+/*
 //By having two packets, we can be receiving one packet while the user is processing another.
 //This is also useful because if the user wants to hold onto a packet for a while, we can still keep working.
 #define STOPKT 2
@@ -49,6 +50,12 @@ extern uint32_t PacketStore[STOPKTSIZE*STOPKT];
 extern uint8_t  PacketStoreFlags[STOPKT]; //0 = free, 1 = in progress, 2 = good to go (to be received and processed), 3 = currently in some custom process.
 extern uint16_t PacketStoreLength[STOPKT]; 
 extern int8_t   PacketStoreInSitu; //-1 = unassociated, -2 = faulted on this packet, + or 0 = in this packet.
+*/
+
+//Stored packets, for debugging.
+#define STOPKTSIZE (MAX_FRAMELEN+15)  
+extern uint32_t PacketStore[STOPKTSIZE];
+extern uint16_t PacketStoreLength; 
 extern int8_t   KeepNextPacket;
 
 extern uint8_t gotdma;

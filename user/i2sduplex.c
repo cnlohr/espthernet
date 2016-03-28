@@ -308,22 +308,46 @@ void SendI2SPacket( uint32_t * pak, uint16_t dwords )
 }
 
 //For storing packets when they come in, so they can be processed in the main loop.
-uint32_t PacketStore[STOPKTSIZE*STOPKT];
-uint8_t  PacketStoreFlags[STOPKT]; //0 = free, 1 = in progress, 2 = complete (Received, ready for processing), 3 = locked for debugging
-uint16_t PacketStoreLength[STOPKT]; 
-int8_t   PacketStoreInSitu = -1; //-1 = unassociated, -2 = faulted on this packet, + or 0 = in this packet.
+uint32_t PacketStore[STOPKTSIZE];
+uint16_t PacketStoreLength; 
 int8_t   KeepNextPacket = 0;
+int8_t   PacketStoreInSitu = 0;
 
 static void	GotNewData( uint32_t * dat, int datlen )
 {
 	int i = 0;
+	int r;
+	static int stripe = 0;
+
 	gotdma=1;
 
-keep_searching:
-
-	if( PacketStoreInSitu == -1 )
+keep_going:
+	if( PacketStoreInSitu < 0 )
 	{
-		int stripe = 0;
+		//Search for until data is ffffffff or 00000000.  This would be if we think we hit the end of a packet or a bad packet.  Just speed along till the bad dream is over.
+		for( ; i < datlen; i++ )
+		{
+			uint32_t d = dat[i];
+
+			//Look for a set of 3 non null packets.
+			if( d != 0xffffffff && d != 0x00000000 )
+			{
+				PacketStoreInSitu = 0;
+				gotlink = 1;
+				i++;
+				stripe = 1;
+				break;
+			}
+		}
+
+		//Still searching?  If so come back in here next time.
+		if( PacketStoreInSitu ) return;
+	}
+
+	//Otherwise we're looking for 3 d's
+	if( PacketStoreInSitu == 0 )
+	{
+		//Quescent state.
 		for( ; i < datlen; i++ )
 		{
 			uint32_t d = dat[i];
@@ -341,94 +365,50 @@ keep_searching:
 
 			if( stripe == 3 )
 			{
-				int j;
-				//Got new data!
-				for( j = 0; j < STOPKT; j++ )
-				{
-					if( PacketStoreFlags[j] == 0 )
-					{
-						PacketStoreFlags[j] = 1;
-						PacketStoreLength[j] = 0;
-						PacketStoreInSitu = j;
-						i -= 2;
-						break;
-					}
-				}
-				if( j == STOPKT )
-				{
-					PacketStoreInSitu = -2;
-				}
+				PacketStoreInSitu = 1;
 				break;
 			}
 		}
 
-		if( i == datlen )
+		//Nothing interesting happened all packet.
+		if( !PacketStoreInSitu )
 			return;
 
-		//Otherwise something happened, like data started coming in.
-	}
+		//Something happened... 
+		i++;
 
-	if( PacketStoreInSitu >= 0 )
-	{
-		uint16_t * len = &PacketStoreLength[PacketStoreInSitu];
-		uint32_t * pk = &PacketStore[PacketStoreInSitu*STOPKTSIZE];
-		gotlink = 1;
-		for( ; i < datlen; i++ )
+		r = ResetPacketInternal(1);
+
+		//Make sure we can get a free packet.
+		if( r < 0 )
 		{
-			uint32_t d = dat[i];
-
-			pk[(*len)++] = d;
-
-			if( d == 0xffffffff || d == 0x00000000 )
-			{
-				PacketStoreFlags[PacketStoreInSitu] = 2;
-				break;
-			}
-
-			if( (*len) >= STOPKTSIZE )
-			{
-				//Need to invalidate.
-				PacketStoreFlags[PacketStoreInSitu] = 0;
-				PacketStoreInSitu = -2;
-				goto keep_searching;				
-			}
-		}
-		if( i != datlen )
-		{
+			//Otherwise, we have to dump this on-wire packet.
 			PacketStoreInSitu = -1;
-			goto keep_searching;
+			goto keep_going;
 		}
-		else
-		{
-			//Keep going with this packet.
-			return;
-		}			
+
+		//Good to go and start processing data.
 	}
-	else
+
+	//Start processing a packet.
+	if( i < datlen )
+	{
+		r = DecodePacket( &dat[i], datlen - i );
+	}
+
+	//Done with this segment, next one to come.
+	if( r == 0 )
 	{
 		gotlink = 1;
-
-		//Packet invalid.  Keep reading until found point.	
-		for( ; i < datlen; i++ )
-		{
-			uint32_t d = dat[i];
-
-			//Look for a set of 3 non null packets.
-			if( d == 0xffffffff || d == 0x00000000 )
-			{
-				break;
-			}
-		}
-		if( i != datlen )
-		{
-			PacketStoreInSitu = -1;
-			goto keep_searching;
-		}
-		else
-		{
-			return;
-		}
+		return;
 	}
+
+	//Packet is complete, or error in packet.
+	PacketStoreInSitu = -1;
+
+	return;
+//Can't keep going, since we don't know how far DecodePacket read.
+//	goto keep_going;
 }
 
 
