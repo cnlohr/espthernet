@@ -5,7 +5,7 @@
 
 #define MAX_FRAMELEN (ETBUFFERSIZE)
 
-#define ETBUFFERSIZE (586) //576 is the IP minimum MTU
+#define ETBUFFERSIZE (600) //576 is the IP minimum MTU
 #define TX_SCRATCHES 1
 #define RX_BUFFER_START 0
 #define RX_BUFFER_END   MAX_FRAMELEN
@@ -15,6 +15,7 @@
 
 #define INCLUDE_UDP
 
+#define ALLOW_FRAME_DEBUGGING
 
 
 #define RXBUFS 2

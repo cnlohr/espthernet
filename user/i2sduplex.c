@@ -30,6 +30,16 @@ int erx, etx;
 
 volatile uint8_t i2stxdone;
 
+
+#ifdef ALLOW_FRAME_DEBUGGING
+//For storing packets when they come in, so they can be processed in the main loop.
+uint32_t PacketStore[STOPKTSIZE];
+uint16_t PacketStoreLength; 
+int8_t   KeepNextPacket = 0;
+#endif
+int8_t   PacketStoreInSitu = 0;
+
+
 static void	GotNewData( uint32_t * dat, int datlen );
 
 void KickRX()
@@ -90,9 +100,14 @@ LOCAL void slc_isr(void) {
 	int x;
 	fxcycle++;
 
+int kg = 0;
+keepgoing:
+
 	slc_intr_status = READ_PERI_REG(SLC_INT_STATUS);
+
 	//clear all intr flags
 	WRITE_PERI_REG(SLC_INT_CLR, 0xffffffff);//slc_intr_status);
+
 
 //printf( "%08x\n", slc_intr_status );
 	if ( (slc_intr_status & SLC_RX_EOF_INT_ST))
@@ -125,9 +140,10 @@ LOCAL void slc_isr(void) {
 		erx++;
 		finishedDesc->owner=1;
 
-
 		//Don't know why - but this MUST be done, otherwise everything comes to a screeching halt.
 		slc_intr_status &= ~SLC_TX_EOF_INT_ST;
+
+		if( kg ) goto keepgoing;
 	}
 	if( slc_intr_status & SLC_TX_DSCR_ERR_INT_ST ) //RX Fault, maybe owner was not set fast enough?
 	{
@@ -141,7 +157,6 @@ LOCAL void slc_isr(void) {
 		last_unknown_int = slc_intr_status;
 		printf( "UI:%08x\n", last_unknown_int );
 	}
-
 
 }
 
@@ -319,12 +334,6 @@ void SendI2SPacket( uint32_t * pak, uint16_t dwords )
 	i2sBufDescTX[1].next_link_ptr= (int)(&i2sBufDescTX[2]);
 }
 
-//For storing packets when they come in, so they can be processed in the main loop.
-uint32_t PacketStore[STOPKTSIZE];
-uint16_t PacketStoreLength; 
-int8_t   KeepNextPacket = 0;
-int8_t   PacketStoreInSitu = 0;
-
 static void	GotNewData( uint32_t * dat, int datlen )
 {
 	int i = 0;
@@ -355,9 +364,6 @@ keep_going:
 		if( PacketStoreInSitu ) return;
 	}
 
-
-#define MINIMUM_IN_ROW_NONZERO 6
-
 	//Otherwise we're looking for several non-zero packets in a row.
 	if( PacketStoreInSitu == 0 )
 	{
@@ -377,7 +383,7 @@ keep_going:
 				stripe = 0;
 			}
 
-			if( stripe == MINIMUM_IN_ROW_NONZERO )
+			if( stripe == 4 )
 			{
 				PacketStoreInSitu = 1;
 				break;
@@ -388,6 +394,7 @@ keep_going:
 		if( !PacketStoreInSitu )
 			return;
 
+		stripe = 0;
 		//Something happened... 
 
 		r = ResetPacketInternal(1);
@@ -402,21 +409,26 @@ keep_going:
 
 		//Good to go and start processing data.
 
-
+#ifdef ALLOW_FRAME_DEBUGGING
 		if( KeepNextPacket > 0 && KeepNextPacket < 3 )
 		{
 			PacketStoreLength = 0;
 			g_process_paktime = 0;
 		}
+
+#endif
+		i += 2;
+
 	}
 
+#ifdef ALLOW_FRAME_DEBUGGING
 	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
 	{
 		int start;
 		if( i != 0 )
 		{
 			//Starting a packet.	
-			start = i-MINIMUM_IN_ROW_NONZERO;
+			start = i-(4+2);
 			if( start < 0 ) start = 0;
 		}
 		else
@@ -433,6 +445,7 @@ keep_going:
 
 		g_process_paktime -= system_get_time();
 	}
+#endif
 
 	//Start processing a packet.
 	if( i < datlen )
@@ -441,10 +454,12 @@ keep_going:
 	}
 	i += r;
 
+#ifdef ALLOW_FRAME_DEBUGGING
 	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
 	{
 		g_process_paktime += system_get_time();
 	}
+#endif
 
 	//Done with this segment, next one to come.
 	if( r == 0 )
@@ -455,7 +470,7 @@ keep_going:
 
 	//Packet is complete, or error in packet.  No matter what, we have to finish off the packet next time.
 	PacketStoreInSitu = -1;
-
+#ifdef ALLOW_FRAME_DEBUGGING
 	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
 	{
 		int trim = (datlen-r);
@@ -470,9 +485,8 @@ keep_going:
 		//Packet knowingly faulted and we were waiting for packet?
 		if( KeepNextPacket == 2 && rx_pack_flags[rx_cur] == 0 ) { KeepNextPacket = 4; }
 	}
+#endif
 
-	//TODO: Figure out why us trying to keep going here messes everything up.
-	//Should be able to dump off whatever bytes were consumed and keep going.
 	goto keep_going;
 }
 

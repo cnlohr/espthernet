@@ -26,6 +26,7 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 		return buffend-buffer;
 	}
 
+#ifdef ALLOW_FRAME_DEBUGGING
 	case 'K': case 'k':		//Capture packet
 	{
 		PacketStoreLength = 0;
@@ -99,6 +100,8 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 		}
 		return buffend-buffer;
 	}
+#endif
+
 	}
 	return -1;
 }

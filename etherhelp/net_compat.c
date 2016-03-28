@@ -207,13 +207,13 @@ void et_backend_tick_quick()
 		}
 		else
 		{
-
+#ifdef ALLOW_FRAME_DEBUGGING
 			//If we're debugging, be sure to capture this packet as a failure.
 			if( KeepNextPacket == 2 )
 			{
 				KeepNextPacket = 4;
 			}
-
+#endif
 			printf( "!CRC\n" );
 		}
 

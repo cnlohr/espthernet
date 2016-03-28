@@ -25,7 +25,6 @@
 
 extern uint32_t i2sBDRX[I2SDMABUFLEN*DMABUFFERDEPTH];
 
-
 extern volatile uint8_t i2stxdone;
 extern volatile uint32_t last_unknown_int;
 
@@ -53,10 +52,13 @@ extern int8_t   PacketStoreInSitu; //-1 = unassociated, -2 = faulted on this pac
 */
 
 //Stored packets, for debugging.
+
+#ifdef ALLOW_FRAME_DEBUGGING
 #define STOPKTSIZE (MAX_FRAMELEN+15)  
 extern uint32_t PacketStore[STOPKTSIZE];
 extern uint16_t PacketStoreLength; 
 extern int8_t   KeepNextPacket;
+#endif
 
 extern uint8_t gotdma;
 extern uint8_t gotlink;

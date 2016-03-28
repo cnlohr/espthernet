@@ -48,7 +48,6 @@ int ResetPacketInternal()
 }
 
 
-#if 1
 
 //Return -6 if terminate search... end of packet: 1
 //Return 0 of bytes read if good.
