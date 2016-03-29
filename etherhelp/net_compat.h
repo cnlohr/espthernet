@@ -50,8 +50,8 @@ static inline uint8_t et_pop8() { return ETbuffer[ETsendplace++]; }
 //Raw, on-wire push. (assuming already in write)
 void et_pushpgmstr( const char * msg );
 void et_pushstr( const char * msg );
-void et_pushblob( const uint8_t * data, uint8_t len );
-void et_pushpgmblob( const uint8_t * data, uint8_t len );
+void et_pushblob( const uint8_t * data, uint16_t len );
+void et_pushpgmblob( const uint8_t * data, uint16_t len );
 static inline void et_push8( uint8_t d ) { ETbuffer[ETsendplace++] = d; }
 static inline void et_pushzeroes( uint8_t nrzeroes ) { while( nrzeroes-- ) et_push8(0); }
 void et_push16( uint16_t v );
@@ -74,7 +74,7 @@ void et_start_checksum( uint16_t start, uint16_t len );
 static inline uint16_t et_get_checksum() { return ETchecksum; }
 
 //Modify a word of memory (little endian)
-static inline void et_alter_word( uint16_t address, uint16_t val ) { ETbuffer[address] = val>>8; ETbuffer[address+1] = val & 0xff; }
+static inline void et_alter_word( uint16_t address, uint16_t val ) { ETbuffer[address+sendbaseaddress] = val>>8; ETbuffer[address+1+sendbaseaddress] = val & 0xff; }
 
 //Copy from one part of the enc to the other.
 //Warning range_end is INCLUSIVE! You will likely want to subtract one.

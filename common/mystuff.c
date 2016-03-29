@@ -5,6 +5,8 @@
 #include "mystuff.h"
 #include <c_types.h>
 #include <mem.h>
+#include <net_compat.h>
+#include <tcp.h>
 
 const char * enctypes[6] = { "open", "wep", "wpa", "wpa2", "wpa_wpa2", 0 };
 
@@ -12,7 +14,7 @@ char generic_print_buffer[384];
 char generic_buffer[1500] __attribute__ ((aligned (32)));
 char * generic_ptr;
 
-int32 my_atoi( const char * in )
+int32 ICACHE_FLASH_ATTR my_atoi( const char * in )
 {
 	int positive = 1; //1 if negative.
 	int hit = 0;
@@ -41,7 +43,7 @@ int32 my_atoi( const char * in )
 	return val*positive;
 }
 
-void Uint32To10Str( char * out, uint32 dat )
+void ICACHE_FLASH_ATTR Uint32To10Str( char * out, uint32 dat )
 {
 	int tens = 1000000000;
 	int val;
@@ -82,7 +84,7 @@ int8_t fromhex1( char c )
 		return -1;
 }
 
-void  NixNewline( char * str )
+void ICACHE_FLASH_ATTR NixNewline( char * str )
 {
 	if( !str ) return;
 	int sl = ets_strlen( str );
@@ -91,24 +93,114 @@ void  NixNewline( char * str )
 }
 
 
+////////////////////////////////Bridge mechanism from Ethernet
 
-void ICACHE_FLASH_ATTR  EndTCPWrite( struct 	espconn * conn )
+struct espconn interop_conns[TCP_SOCKETS];
+struct _esp_tcp interop_tcps[TCP_SOCKETS];
+
+
+//Comes from underlying stack.
+void  ICACHE_FLASH_ATTR  et_TCPConnectionClosing( uint8_t i )
 {
-	if(generic_ptr!=generic_buffer)
+	printf( "CLOSE CALLBACK\n" );
+	if( interop_conns[i].proto.tcp->disconnect_callback )
 	{
-		int r = espconn_send(conn,generic_buffer,generic_ptr-generic_buffer);
+		 interop_conns[i].proto.tcp->disconnect_callback( &interop_conns[i] );
 	}
 }
 
 
-void  PushString( const char * buffer )
+//called by user
+void ICACHE_FLASH_ATTR et_espconn_disconnect( struct espconn * pespconn )
+{
+	printf( "FORCE CLOSE\n" );
+	if( pespconn->link_cnt > 200 )
+	{
+		et_RequestClosure( pespconn->link_cnt-200 );
+		et_TCPConnectionClosing( pespconn->link_cnt-200 );
+	}
+	else
+	{
+		espconn_disconnect( pespconn );
+	}
+}
+
+
+
+uint8_t ICACHE_FLASH_ATTR et_TCPReceiveSyn( uint16_t portno )
+{
+	if( portno != 80 )
+	{
+		return 0;
+	}
+
+	int ret = et_GetFreeConnection();
+	
+	if( ret )
+	{
+		struct espconn * rc = &interop_conns[ret];
+		rc->type = ESPCONN_TCP;
+		rc->state = 0;
+		rc->proto.tcp = &interop_tcps[ret];
+		rc->link_cnt = ret+200;
+		//TODO: Other setup to make our tcp conn look like an ESP tcp conn.
+
+		httpserver_connectcb( rc );
+		printf( "Connect on %d/%d\n", portno, ret );
+	}
+
+	return ret;
+}
+
+//Comes from underlying stack.
+uint8_t ICACHE_FLASH_ATTR et_TCPReceiveData( uint8_t i, uint16_t totallen )
+{
+	if( interop_conns[i].recv_callback )
+	{
+		 interop_conns[i].recv_callback( &interop_conns[i], &ETbuffer[ETsendplace], totallen );
+	}
+}
+
+
+
+//////////////////////////////End ethernet bridging.
+
+
+
+
+void ICACHE_FLASH_ATTR  EndTCPWrite( struct espconn * conn )
+{
+	if( conn->link_cnt > 200 )
+	{
+		int con = conn->link_cnt-200;
+		TCPs[con].sendtype = ACKBIT | PSHBIT;
+		et_StartTCPWrite( con );
+		et_pushblob( generic_buffer,generic_ptr-generic_buffer );
+		et_EndTCPWrite( con );
+	}
+	else
+	{
+		if(generic_ptr!=generic_buffer)
+		{
+			int r = espconn_send(conn,generic_buffer,generic_ptr-generic_buffer);
+		}
+	}
+}
+
+
+
+
+
+
+
+void ICACHE_FLASH_ATTR PushString( const char * buffer )
 {
 	char c;
 	while( c = *(buffer++) )
 		PushByte( c );
 }
 
-void PushBlob( const uint8 * buffer, int len )
+void ICACHE_FLASH_ATTR PushBlob( const uint8 * buffer, int len )
 {
 	int i;
 	for( i = 0; i < len; i++ )
@@ -118,22 +210,38 @@ void PushBlob( const uint8 * buffer, int len )
 
 int8_t ICACHE_FLASH_ATTR TCPCanSend( struct espconn * conn, int size )
 {
-#ifdef SAFESEND
-	return TCPDoneSend( conn );
-#else
-	struct espconn_packet infoarg;
-	sint8 r = espconn_get_packet_info(conn, &infoarg);
-
-	if( infoarg.snd_buf_size >= size && infoarg.snd_queuelen > 0 )
-		return 1;
+	if( conn->link_cnt > 200 )
+	{
+		int con = conn->link_cnt - 200;
+		return et_TCPCanSend( con );
+	}
 	else
-		return 0;
-#endif
+	{
+	#ifdef SAFESEND
+		return TCPDoneSend( conn );
+	#else
+		struct espconn_packet infoarg;
+		sint8 r = espconn_get_packet_info(conn, &infoarg);
+
+		if( infoarg.snd_buf_size >= size && infoarg.snd_queuelen > 0 )
+			return 1;
+		else
+			return 0;
+	#endif
+	}
 }
 
 int8_t ICACHE_FLASH_ATTR TCPDoneSend( struct espconn * conn )
 {
-	return conn->state == ESPCONN_CONNECT;
+	if( conn->link_cnt > 200 )
+	{
+		int con = conn->link_cnt - 200;
+		return et_TCPCanSend( con );
+	}
+	else
+	{
+		return conn->state == ESPCONN_CONNECT;
+	}
 }
 
 const char * ICACHE_FLASH_ATTR  my_strchr( const char * st, char c )

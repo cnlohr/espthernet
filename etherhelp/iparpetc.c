@@ -29,7 +29,7 @@ static unsigned short i;  //For use within the scope of an in-file function, not
 #include "tcp.h"
 #endif
 
-uint16_t NetGetScratch()
+uint16_t ICACHE_FLASH_ATTR NetGetScratch()
 {
 	static uint8_t scratch = 0;
 	scratch++;
@@ -44,14 +44,14 @@ uint16_t NetGetScratch()
 #error ERROR: You must have UDP support for DHCP support.
 #endif
 
-void RequestNewIP( uint8_t mode, uint8_t * negotiating_ip, uint8_t * dhcp_server );
+void ICACHE_FLASH_ATTR RequestNewIP( uint8_t mode, uint8_t * negotiating_ip, uint8_t * dhcp_server );
 
 uint8_t dhcp_clocking = 1;
 uint16_t dhcp_seconds_remain = 0;
 uint8_t dhcp_ticks_in_sec = 0;
 const char * DHCPName = 0;
 
-void HandleDHCP( uint16_t len )
+void ICACHE_FLASH_ATTR HandleDHCP( uint16_t len )
 {
 	uint8_t tmpip[4];
 	uint8_t tmp[4];
@@ -169,12 +169,12 @@ void HandleDHCP( uint16_t len )
 	}
 }
 
-void SetupDHCPName( const char * name  )
+void ICACHE_FLASH_ATTR SetupDHCPName( const char * name  )
 {
 	DHCPName = name;
 }
 
-void TickDHCP()
+void ICACHE_FLASH_ATTR TickDHCP()
 {
 	if( dhcp_ticks_in_sec++ < DHCP_TICKS_PER_SECOND )
 	{
@@ -198,7 +198,7 @@ void TickDHCP()
 }
 
 //Mode = 1 for discover, Mode = 3 for request - if discover, dhcp_server should be 0.
-void RequestNewIP( uint8_t mode, uint8_t * negotiating_ip, uint8_t * dhcp_server )
+void ICACHE_FLASH_ATTR RequestNewIP( uint8_t mode, uint8_t * negotiating_ip, uint8_t * dhcp_server )
 {
 	uint8_t oldip[4];
 	SwitchToBroadcast();
@@ -279,7 +279,7 @@ void RequestNewIP( uint8_t mode, uint8_t * negotiating_ip, uint8_t * dhcp_server
 #endif
 
 
-void send_etherlink_header( unsigned short type )
+void ICACHE_FLASH_ATTR send_etherlink_header( unsigned short type )
 {
 	PUSHB( macfrom, 6 );
 
@@ -399,7 +399,7 @@ static void HandleICMP()
 }
 
 
-static void HandleArp( )
+static void ICACHE_FLASH_ATTR HandleArp( )
 {
 	unsigned char sendermac_ip_and_targetmac[16];
 //	unsigned char senderip[10]; //Actually sender ip + target mac, put in one to shrink code.
@@ -484,7 +484,7 @@ static void HandleArp( )
 	}
 }
 
-void et_receivecallback( uint16_t packetlen )
+void ICACHE_FLASH_ATTR et_receivecallback( uint16_t packetlen )
 {
 	uint8_t is_the_packet_for_me = 1;
 	unsigned char i;
@@ -617,7 +617,7 @@ void et_receivecallback( uint16_t packetlen )
 
 #ifdef INCLUDE_UDP
 
-void util_finish_udp_packet( )// unsigned short length )
+void ICACHE_FLASH_ATTR util_finish_udp_packet( )// unsigned short length )
 {
 	volatile unsigned short ppl, ppl2;
 
@@ -654,7 +654,7 @@ void util_finish_udp_packet( )// unsigned short length )
 
 
 
-void SwitchToBroadcast()
+void ICACHE_FLASH_ATTR SwitchToBroadcast()
 {
 	//Set the address we want to send to (broadcast)
 	for( i = 0; i < 6; i++ )

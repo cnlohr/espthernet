@@ -332,7 +332,7 @@ void et_pushpgmstr( const char * msg )
 	} while( 1 );
 }
 
-void et_pushpgmblob( const uint8_t * data, uint8_t len )
+void et_pushpgmblob( const uint8_t * data, uint16_t len )
 {
 	while( len-- )
 	{
@@ -347,7 +347,7 @@ void et_pushstr( const char * msg )
 		et_push8( *msg );
 }
 
-void et_pushblob( const uint8_t * data, uint8_t len )
+void et_pushblob( const uint8_t * data, uint16_t len )
 {
 	while( len-- )
 	{
@@ -395,7 +395,7 @@ int8_t ICACHE_FLASH_ATTR et_xmitpacket( uint16_t start, uint16_t len )
 
 	uint8_t  * buffer = &ETbuffer[start];
 	uint32_t crc = crc32( buffer, len );
-	uint16_t i = start + len;
+	uint16_t i = len;
 	
 	buffer[i++] = crc & 0xff;
 	buffer[i++] = (crc>>8) & 0xff;
@@ -417,7 +417,7 @@ unsigned short et_recvpack()
 void et_start_checksum( uint16_t start, uint16_t len )
 {
 	uint16_t i;
-	const uint16_t * wptr = (uint16_t*)&ETbuffer[start];
+	const uint16_t * wptr = (uint16_t*)&ETbuffer[start+sendbaseaddress];
 	uint32_t csum = 0;
 	for (i=1;i<len;i+=2)
 	{

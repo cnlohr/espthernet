@@ -29,7 +29,7 @@ ICACHE_FLASH_ATTR void HTTPClose( )
 	//socket is successfully closed.
 	//curhttp->state = HTTP_STATE_NONE;
 	curhttp->state = HTTP_WAIT_CLOSE;
-	espconn_disconnect( curhttp->socket ); 
+	et_espconn_disconnect( curhttp->socket ); 
 }
 
 
@@ -173,7 +173,7 @@ static void DoHTTP( uint8_t timed )
 	}
 }
 
-void HTTPTick( uint8_t timed )
+void ICACHE_FLASH_ATTR HTTPTick( uint8_t timed )
 {
 	uint8_t i;
 	for( i = 0; i < HTTP_CONNECTIONS; i++ )
@@ -364,7 +364,7 @@ httpserver_connectcb(void *arg)
 	}
 	if( i == HTTP_CONNECTIONS )
 	{
-		espconn_disconnect( pespconn );
+		et_espconn_disconnect( pespconn );
 		return;
 	}
 

@@ -35,6 +35,9 @@ static uint16_t BrowseRespondPort = 0;
 int ets_str2macaddr(void *, void *);
 
 int need_to_switch_opmode = 0; //0 = no, 1 = will need to. 2 = do it now.
+
+#ifdef ENABLE_SCANNING
+
 #define MAX_STATIONS 20
 struct totalscan_t
 {
@@ -71,6 +74,7 @@ static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 	}
 }
 
+#endif
 
 //Service name can be the title of the service, or can be "esp8266" to list all ESP8266's.
 void ICACHE_FLASH_ATTR BrowseForService( const char * servicename )
@@ -598,8 +602,9 @@ failfx:
 				int i, r;
 				struct scan_config sc;
 
-				scanplace = 0;
 
+#ifdef ENABLE_SCANNING
+				scanplace = 0;
 				sc.ssid = 0;
 				sc.bssid = 0;
 				sc.channel = 0;
@@ -610,12 +615,14 @@ failfx:
 					wifi_set_opmode_current( STATION_MODE );
 					need_to_switch_opmode = 1;
 				}
-
 				r = wifi_station_scan(&sc, scandone );
 				ExitCritical();
 
 				buffend += ets_sprintf( buffend, "WS%d\n", r );
 				uart0_sendStr(buffer);
+#else
+				buffend += ets_sprintf( buffend, "!WS" );
+#endif
 
 				break;
 			}
@@ -623,6 +630,7 @@ failfx:
 		case 'R': case 'r':
 			{
 				int i, r;
+#ifdef ENABLE_SCANNING
 
 				buffend += ets_sprintf( buffend, "WR%d\n", scanplace );
 				
@@ -631,6 +639,9 @@ failfx:
 					buffend += ets_sprintf( buffend, "#%s\t%s\t%d\t%d\t%s\n", 
 						totalscan[i].name, totalscan[i].mac, totalscan[i].rssi, totalscan[i].channel, enctypes[totalscan[i].encryption] );
 				}
+#else
+				buffend += ets_sprintf( buffend, "!WR" );
+#endif
 
 				break;
 			}

@@ -57,7 +57,7 @@ static void ICACHE_FLASH_ATTR procTask(os_event_t *events)
 static void ICACHE_FLASH_ATTR myTimer(void *arg)
 {
 	et_backend_tick_slow();
-
+	TickTCP();
 	CSTick( 1 );
 }
 
@@ -129,8 +129,8 @@ void ICACHE_FLASH_ATTR user_init(void)
 #endif
 
 	CSSettingsLoad( 0 );
-	CSPreInit();
 
+	CSPreInit();
 	//Override wifi.
 #if FORCE_SSID
 	{
@@ -145,6 +145,8 @@ void ICACHE_FLASH_ATTR user_init(void)
 #endif
 
 	CSInit();
+
+	InitTCP();
 
 	//Note: MDNS is currently disabled in this project.
 	SetServiceName( "espthernet" );

@@ -5,7 +5,7 @@
 #ifndef _MYSTUFF_H
 #define _MYSTUFF_H
 
-
+#include <eth_config.h>
 #include <mem.h>
 #include <c_types.h>
 #include <user_interface.h>
@@ -34,10 +34,10 @@ extern const char * enctypes[6];// = { "open", "wep", "wpa", "wpa2", "wpa_wpa2",
 char tohex1( uint8_t i );
 int8_t fromhex1( char c ); //returns -1 if not hex char.
 
-int32  my_atoi( const char * in );
-void  Uint32To10Str( char * out, uint32 dat );
+int32 ICACHE_FLASH_ATTR my_atoi( const char * in );
+void ICACHE_FLASH_ATTR Uint32To10Str( char * out, uint32 dat );
 
-void  NixNewline( char * str ); //If there's a newline at the end of this string, make it null.
+void ICACHE_FLASH_ATTR NixNewline( char * str ); //If there's a newline at the end of this string, make it null.
 
 //For holding TX packet buffers
 extern char generic_buffer[1500];
@@ -45,7 +45,7 @@ extern char * generic_ptr;
 int8_t ICACHE_FLASH_ATTR  TCPCanSend( struct espconn * conn, int size );
 int8_t ICACHE_FLASH_ATTR  TCPDoneSend( struct espconn * conn );
 void  ICACHE_FLASH_ATTR  EndTCPWrite( struct espconn * conn );
-
+void ICACHE_FLASH_ATTR et_espconn_disconnect( struct espconn * pespconn );
 
 #define PushByte( c ) { *(generic_ptr++) = c; }
 
@@ -68,5 +68,7 @@ char * ICACHE_FLASH_ATTR strdupcaselower( const char * src );
 
 
 uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
+
+#define _BV(x) (1<<(x))
 
 #endif

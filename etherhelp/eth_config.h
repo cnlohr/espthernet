@@ -9,7 +9,10 @@
 //576 is the IP minimum MTU
 //1536 is the Ethernet MTU, +4 is for CRCs
 
-#define TX_SCRATCHES 1
+#define TX_SCRATCHES 1  //Cannot be anything else!!!
+
+#define TX_SCRATCHPAD_END MAX_FRAMELEN
+#define TCP_BUFFERSIZE MAX_FRAMELEN
 #define RX_BUFFER_START (MAX_FRAMELEN+TCP_BUFFERS)
 #define RX_BUFFER_END   (MAX_FRAMELEN+TCP_BUFFERS+RX_BUFFER_SIZE)
 
@@ -20,15 +23,17 @@
 
 #define ALLOW_FRAME_DEBUGGING
 
-#define TCPS 5
+#define INCLUDE_TCP
+#define TCP_SOCKETS 4
+#define TCP_BUFFERS ((TCP_SOCKETS-1)*MAX_FRAMELEN)
 
-#define TCP_BUFFERS (TCPS*MAX_FRAMELEN)
-
+#define TCP_TICKS_BEFORE_RESEND 10
+#define TCP_MAX_RETRIES 50
 
 #define RXBUFS 2
 #define PTR_TO_RX_BUF( x ) ( ETBUFFERSIZE + x * MAX_FRAMELEN )
 #define RX_BUFFER_SIZE (RXBUFS*MAX_FRAMELEN)
-extern unsigned char ETbuffer[RX_BUFFER_END] __attribute__((aligned(64)));
+extern unsigned char ETbuffer[RX_BUFFER_END] __attribute__((aligned(32)));
 
 #define TABLE_CRC
 
