@@ -8,7 +8,6 @@
 #include "tcp.h"
 
 #define MARK(x,...)
-#define printf(x,...)
 
 #ifdef INCLUDE_TCP
 
@@ -150,7 +149,6 @@ void ICACHE_FLASH_ATTR HandleTCP(uint16_t iptotallen)
 		t->seq_num = 0xAAAAAAAA; //should be random?
 		t->state = ESTABLISHED;
 		t->time_since_sent = 0;
-		printf( "ZERO TIEM %d\n", rsck );
 		t->idletime = 0;
 
 		//Don't forget to send a syn,ack back to the host.
@@ -210,7 +208,6 @@ void ICACHE_FLASH_ATTR HandleTCP(uint16_t iptotallen)
 			nextseq += payloadlen;   //SEQ NUM
 
 		int16_t diff = ack_num - nextseq;// + iptotallen; // I don't know about this part)
-//		printf( "%d / %d\n", ack_num, t->seq_num );
 
 		//Lost a packet...
 		if( diff < 0 )
@@ -224,7 +221,6 @@ void ICACHE_FLASH_ATTR HandleTCP(uint16_t iptotallen)
 			//The above line seems to be useful for bandaiding errors, when doing a more complete check, uncomment it.
 			t->idletime = 0;
 			t->time_since_sent = 0;
-printf( "DIFOK\n" );
 			t->seq_num = nextseq;
 			//t->seq_num = t->seq_num;
 //			MARK( "__goodack" );
@@ -243,7 +239,6 @@ printf( "DIFOK\n" );
 		}
 		else
 		{
-printf( "FIN FROMA\n");
 			//XXX TODO Handle FIN correctly.
 			t->ack_num++;              //SEQ NUM
 			t->sendtype = ACKBIT | FINBIT;
@@ -317,7 +312,6 @@ reset_conn0:
 	TCPs[0].ack_num = sequence_num;
 	TCPs[0].seq_num = ack_num;
 	TCPs[0].sendtype = RSTBIT | FINBIT | ACKBIT;
-printf( "RESET\n" );
 	TCPs[0].state = 0;
 
 send_early: //This requires a RST to be sent back.
@@ -373,6 +367,7 @@ void ICACHE_FLASH_ATTR TickTCP()
 
 		if( t->time_since_sent > TCP_TICKS_BEFORE_RESEND )
 		{
+			printf( "RESEND\n" );
 			if( t->state == CLOSING_WAIT )
 			{
 				MARK( "__Closeout %d\n", i );
@@ -395,7 +390,6 @@ void ICACHE_FLASH_ATTR TickTCP()
 //XXX TODO This needs to be done better.
 void ICACHE_FLASH_ATTR et_RequestClosure( uint8_t c )
 {
-	printf( "RECCL %d %d\n", c );
 	if( !TCPs[c].state || TCPs[c].state == CLOSING_WAIT ) return;
 	TCPs[c].sendtype = FINBIT|ACKBIT;//RSTBIT;
 
@@ -432,10 +426,8 @@ void ICACHE_FLASH_ATTR et_EndTCPWrite( uint8_t c )
 	length = et_get_write_length() - 6;
 	t->sendlength = length;
 //	payloadlen = length - 34 - 20;
-printf( "EWRT %d %d %d %d %02x %02x\n", c, length, ETsendplace, sendbaseaddress, t->sendtype, ( PSHBIT | SYNBIT | FINBIT ) );
 	if( t->sendtype & ( PSHBIT | SYNBIT | FINBIT ) ) //PSH, SYN, RST or FIN packets
 	{
-		printf( "PSH\n" );
 		t->time_since_sent = 1;
 		t->retries = 0;
 	}

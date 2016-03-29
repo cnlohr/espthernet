@@ -81,6 +81,7 @@ LOCAL void slc_isr(void) {
 
 	if ( (slc_intr_status & SLC_RX_EOF_INT_ST))
 	{
+		static uint8_t waitcount;
 		finishedDesc=(struct sdio_queue*)READ_PERI_REG(SLC_RX_EOF_DES_ADDR);
 
 		if( finishedDesc->unused == 0 )
@@ -89,19 +90,30 @@ LOCAL void slc_isr(void) {
 
 			if( tx_link_address == 0 )
 			{
-				i2stxdone = 1;
 
 				//Handle NLPs
 				nonlpcount++;
 				if( nonlpcount > ((40000*16)/(I2STXZERO*32*2)) )
 				{
 					tx_link_address = (uint32_t)(&i2sBufDescNLP);
-					i2stxdone = 0;
 					nonlpcount = 0;
+				}
+
+				if( waitcount > 4 )
+				{
+				
+					i2stxdone = 1;
+
+				}
+				else
+				{
+					i2stxdone = 0;
+					waitcount++;
 				}
 			}
 			else
 			{
+				waitcount = 0;
 				i2sBufDescTX[1].next_link_ptr = tx_link_address;
 				tx_link_address = 0;
 			}
