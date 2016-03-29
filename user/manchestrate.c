@@ -1,6 +1,6 @@
 #include "manchestrate.h"
 #include <mystuff.h>
-
+#include "c_types.h"
 
 //The code up here is for decoding manchester encoded packets.
 
@@ -117,7 +117,7 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 			if( !in_preamble )
 			{
 				//Handle messy logic of going into regular from preamble.
-				//XXX TODO: It is possible this line may be insufficient.
+				//XXX TODO: It is possible (likely) this line may be insufficient.
 				state1 |= 0x200;
 				break;
 			}
@@ -145,15 +145,18 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 
 		//Since we hit the end of the preamble, we have to finish out the
 		//32-bit word...  We do that here.
+
+		//Neat trick: By dividing by 4 then switching based off that, saves 107 bytes of code space!
+		nibble>>=2;
 		switch( nibble )
 		{
-		case 28:nibblet(28);
-		case 24:nibblet(24);
-		case 20:nibblet(20);
-		case 16:nibblet(16);
-		case 12:nibblet(12);
-		case 8:nibblet(8);
-		case 4:nibblet(4);
+		case 7:nibblet(28);
+		case 6:nibblet(24);
+		case 5:nibblet(20);
+		case 4:nibblet(16);
+		case 3:nibblet(12);
+		case 2:nibblet(8);
+		case 1:nibblet(4);
 		case 0:nibblet(0);
 		}
 
@@ -165,7 +168,10 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 
 	//Not in premable, this does actual packet decoding.
 	{
-		uint16_t lcl_current_packet_rec_place = current_packet_rec_place;
+		//uint16_t lcl_current_packet_rec_place = current_packet_rec_place;
+
+		uint8_t * cpr = &((uint8_t*)current_packet)[current_packet_rec_place];
+		uint8_t * cprm = &((uint8_t*)current_packet)[MAX_FRAMELEN];
 
 		for( ; k < len; k++ )
 		{
@@ -183,8 +189,8 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 			//It is possible that we might be a byte behind at some point.  That is okay.  We'll do another check before being done.
 			if( dataoutplace >= 8 )
 			{
-				if( lcl_current_packet_rec_place >= MAX_FRAMELEN ) { rx_pack_flags[rx_cur] = 0; return k+1; }
-				((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = dataoutword;
+				if( cpr >= cprm ) { rx_pack_flags[rx_cur] = 0; return k+1; }
+				*cpr++ = dataoutword;
 				dataoutword >>= 8;
 				dataoutplace -= 8;
 			}
@@ -194,20 +200,23 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 			{
 				gl_dataoutword = dataoutword;
 				gl_dataoutplace = dataoutplace;
-				current_packet_rec_place = lcl_current_packet_rec_place;
+				current_packet_rec_place = cpr - (uint8_t*)current_packet;
 				gl_state1 = state1;
 
 				//If we're a byte behind, take it out here.
 				//Does this need to be a while????
 				while( dataoutplace >= 8 )
 				{
-					if( lcl_current_packet_rec_place >= MAX_FRAMELEN ) { rx_pack_flags[rx_cur] = 0; return k+1; }
-					((uint8_t*)current_packet)[lcl_current_packet_rec_place++] = dataoutword;
+					if( cpr >= cprm ) { rx_pack_flags[rx_cur] = 0; return k+1; }
+					*cpr++ = dataoutword;
 					dataoutword >>= 8;
 					dataoutplace -= 8;
 				}
 
-				rx_pack_lens[rx_cur] = lcl_current_packet_rec_place;
+				rx_pack_lens[rx_cur] = current_packet_rec_place;
+
+
+				//I've tried wording this different ways, always produces more GCC code.
 				if( current_packet_rec_place > 9 )
 				{
 					//Probs a good packet?
@@ -225,7 +234,8 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 		//More data is to come.
 		gl_dataoutword = dataoutword;
 		gl_dataoutplace = dataoutplace;
-		current_packet_rec_place = lcl_current_packet_rec_place;
+//		current_packet_rec_place = lcl_current_packet_rec_place;
+		current_packet_rec_place = cpr - (uint8_t*)current_packet;
 		gl_state1 = state1;
 		return 0;
 	}
@@ -233,7 +243,74 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 }
 
 
+#define TURBOSEND
 
+#ifdef TURBOSEND
+
+//The code down here is for sending, Manchester Encoding data.
+extern volatile uint8_t i2stxdone;
+
+uint32_t sendDMAbuffer[MAX_FRAMELEN+8+4+4] __attribute__ ((aligned (16)));
+uint32_t * sDMA;
+
+static const uint16_t ManchesterTable[16] __attribute__ ((aligned (16))) = {
+	0b1100110011001100, 0b0011110011001100, 0b1100001111001100, 0b0011001111001100,
+	0b1100110000111100, 0b0011110000111100, 0b1100001100111100, 0b0011001100111100,
+	0b1100110011000011, 0b0011110011000011, 0b1100001111000011, 0b0011001111000011,
+	0b1100110000110011, 0b0011110000110011, 0b1100001100110011, 0b0011001100110011,
+};
+
+//#define PushManch( k )	{ *(sDMA++) = (ManchesterTable[(k)>>4])|(ManchesterTable[(k)&0x0f]<<16); }
+void PushManch( unsigned char k ) {	*(sDMA++) = (ManchesterTable[(k)>>4])|(ManchesterTable[(k)&0x0f]<<16); }
+
+void ICACHE_FLASH_ATTR SendPacketData( const unsigned char * c, uint16_t len )
+{
+
+	if( len > MAX_FRAMELEN )
+	{
+		printf( "Sending packet too big.\n" );
+		return;
+	}
+
+	sDMA = &sendDMAbuffer[0];
+
+	len*=4;
+
+
+	*(sDMA++) = 0;
+	*(sDMA++) = 0;
+	*(sDMA++) = 0;
+	*(sDMA++) = 0;
+	PushManch( 0x55 );
+	PushManch( 0x55 );
+	PushManch( 0x55 );
+	PushManch( 0x55 );
+	PushManch( 0x55 );
+	PushManch( 0x55 );
+	PushManch( 0x55 );
+	PushManch( 0xD5 );
+
+	while(!i2stxdone);
+
+	//For some reason the ESP's DMA engine trashes something in the beginning here, Don't send the preamble until after the first 128 bits.
+
+
+	const unsigned char * endc = c + len;
+	while( c != endc )
+	{
+		char g = *(c++);
+		PushManch( g );
+	}
+	*(sDMA++) = 0;
+	*(sDMA++) = 0;
+	*(sDMA++) = 0;
+	*(sDMA++) = 0;
+
+	SendI2SPacket( sendDMAbuffer, sDMA - sendDMAbuffer );
+}
+
+
+#else
 
 //The code down here is for sending, Manchester Encoding data.
 
@@ -249,12 +326,12 @@ uint16_t ManchesterTable[16] __attribute__ ((aligned (16))) = {
 	0b1100110000110011, 0b0011110000110011, 0b1100001100110011, 0b0011001100110011,
 };
 
-void PushManch( unsigned char c )
+void ICACHE_FLASH_ATTR PushManch( unsigned char c )
 {
 	sendDMAbuffer[sendDMAplace++] = (ManchesterTable[c>>4])|(ManchesterTable[c&0x0f]<<16);
 }
 
-void SendPacketData( const unsigned char * c, uint16_t len )
+void ICACHE_FLASH_ATTR SendPacketData( const unsigned char * c, uint16_t len )
 {
 	if( len > MAX_FRAMELEN )
 	{
@@ -283,3 +360,4 @@ void SendPacketData( const unsigned char * c, uint16_t len )
 	SendI2SPacket( sendDMAbuffer, sendDMAplace+4 );
 }
 
+#endif

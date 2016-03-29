@@ -15,7 +15,10 @@
 
 //I2S DMA buffer descriptors
 static struct sdio_queue i2sBufDescRX[DMABUFFERDEPTH];
-static struct sdio_queue i2sBufDescTX[3];
+static struct sdio_queue i2sBufDescTX[4];
+static struct sdio_queue i2sBufDescNLP;
+static uint32_t I2SNLP[4] = { 0x00000000, 0x00000000, 0x0000001f, 0x00000000 };
+
 uint32_t i2sBDRX[I2SDMABUFLEN*DMABUFFERDEPTH];
 uint32_t i2sBDTX[I2STXZERO];
 
@@ -25,9 +28,9 @@ uint8_t gotlink;
 extern uint32_t g_process_paktime;
 
 volatile uint32_t last_unknown_int;
-int fxcycle;
 int erx, etx;
 
+volatile uint32_t tx_link_address;
 volatile uint8_t i2stxdone;
 
 
@@ -98,10 +101,9 @@ LOCAL void slc_isr(void) {
 	struct sdio_queue *finishedDesc;
 	uint32 slc_intr_status;
 	int x;
-	fxcycle++;
 
-int kg = 0;
-keepgoing:
+//int kg = 0;
+//keepgoing:
 
 	slc_intr_status = READ_PERI_REG(SLC_INT_STATUS);
 
@@ -114,11 +116,59 @@ keepgoing:
 	{
 		finishedDesc=(struct sdio_queue*)READ_PERI_REG(SLC_RX_EOF_DES_ADDR);
 
-		if( finishedDesc->unused == 1 )
+		if( finishedDesc->unused == 0 )
 		{
-			i2sBufDescTX[1].next_link_ptr=(int)(&i2sBufDescTX[0]);
+			static uint8_t nonlpcount;
+
+			if( tx_link_address == 0 )
+			{
+				i2stxdone = 1;
+
+				//Handle NLPs
+				nonlpcount++;
+				if( nonlpcount > ((40000*16)/(I2STXZERO*32*2)) )
+				{
+					tx_link_address = (uint32_t)(&i2sBufDescNLP);
+					i2stxdone = 0;
+					nonlpcount = 0;
+				}
+			}
+			else
+			{
+				i2sBufDescTX[1].next_link_ptr = tx_link_address;
+				tx_link_address = 0;
+			}
+		}
+		else
+		{
+			i2sBufDescTX[1].next_link_ptr = (int)&i2sBufDescTX[0];
+		}
+
+
+
+/*
+		if( !i2stxdone && finishedDesc->unused == 0 )
+		{
+			i2sBufDescTX[2].next_link_ptr=(int)(&i2sBufDescTX[0]);
 			i2stxdone = 1;
 		}
+
+		if( finishedDesc->unused == 6 )
+		{
+			i2sBufDescTX[1].next_link_ptr=(int)(&i2sBufDescTX[2]);
+		}
+
+		if( finishedDesc->unused == 2 )
+		{
+			static uint8_t nonlpcount;
+			nonlpcount++;
+
+			if( nonlpcount > ((40000*16)/(I2STXZERO*32*3)) )
+			{
+				i2sBufDescTX[1].next_link_ptr=(int)(&i2sBufDescNLP);
+				nonlpcount = 0;
+			}
+		} */
 
 		slc_intr_status &= ~SLC_RX_EOF_INT_ST;
 		etx++;
@@ -128,6 +178,7 @@ keepgoing:
 		finishedDesc=(struct sdio_queue*)READ_PERI_REG(SLC_TX_EOF_DES_ADDR);
 
 //XXX WARNING Why does undeflow detection not work!?!?
+#define DETECT_UNDERFLOWS
 #ifdef DETECT_UNDERFLOWS
 		static int8_t expected_next = 1;
 		int8_t mep1 = (finishedDesc->unused + 1) % DMABUFFERDEPTH;
@@ -135,7 +186,6 @@ keepgoing:
 		if( i != mep1 ) printf( "Underflow.\n" );
 		expected_next = mep1;
 #endif
-
 		GotNewData( (uint32_t*) finishedDesc->buf_ptr, I2SDMABUFLEN );
 		erx++;
 		finishedDesc->owner=1;
@@ -143,7 +193,7 @@ keepgoing:
 		//Don't know why - but this MUST be done, otherwise everything comes to a screeching halt.
 		slc_intr_status &= ~SLC_TX_EOF_INT_ST;
 
-		if( kg ) goto keepgoing;
+//		if( kg ) goto keepgoing;
 	}
 	if( slc_intr_status & SLC_TX_DSCR_ERR_INT_ST ) //RX Fault, maybe owner was not set fast enough?
 	{
@@ -182,7 +232,7 @@ void ICACHE_FLASH_ATTR testi2s_init() {
 
 
 	//Reset pin functions to non-I2S 
-	//XXX CHARLES DELETEME
+	//XXX CHARLES DELETEME????
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_GPIO12);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_GPIO3);
@@ -229,14 +279,14 @@ void ICACHE_FLASH_ATTR testi2s_init() {
 		i2sBDTX[y] = 0x00000000;
 	}
 
-	i2sBufDescTX[2].owner=1;
-	i2sBufDescTX[2].eof=1;
-	i2sBufDescTX[2].sub_sof=0;
-	i2sBufDescTX[2].datalen=I2STXZERO*4;
-	i2sBufDescTX[2].blocksize=I2STXZERO*4;
-	i2sBufDescTX[2].buf_ptr=(uint32_t)&i2sBDTX[0];
-	i2sBufDescTX[2].unused=1;
-	i2sBufDescTX[2].next_link_ptr= (int)(&i2sBufDescTX[0]);
+	i2sBufDescNLP.owner=1;
+	i2sBufDescNLP.eof=0;
+	i2sBufDescNLP.sub_sof=0;
+	i2sBufDescNLP.datalen=4*4;
+	i2sBufDescNLP.blocksize=4*4;
+	i2sBufDescNLP.buf_ptr=(uint32_t)I2SNLP;
+	i2sBufDescNLP.unused=6;
+	i2sBufDescNLP.next_link_ptr= (int)(&i2sBufDescTX[0]);
 
 	i2stxdone = 1;
 
@@ -246,10 +296,14 @@ void ICACHE_FLASH_ATTR testi2s_init() {
 	//Enable and configure DMA
 	CLEAR_PERI_REG_MASK(SLC_CONF0, (SLC_MODE<<SLC_MODE_S));
 
-
 	SET_PERI_REG_MASK(SLC_CONF0, (1<<SLC_MODE_S));
+	SET_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_INFOR_NO_REPLACE|SLC_TOKEN_NO_REPLACE); //Do this according to 8p-esp8266_i2s_module ... page 6/9  I can't see any impact.
 
-	
+//	CLEAR_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_RX_FILL_EN); //??? Just some junk I tried.
+	SET_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_RX_FILL_EN); //??? Just some junk I tried.
+	SET_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_RX_FILL_MODE); //??? Just some junk I tried.
+
+
 	CLEAR_PERI_REG_MASK(SLC_TX_LINK,SLC_TXLINK_DESCADDR_MASK);
 	SET_PERI_REG_MASK(SLC_TX_LINK, ((uint32)&i2sBufDescRX[0]) & SLC_TXLINK_DESCADDR_MASK); //any random desc is OK, we don't use TX but it needs something valid
 	CLEAR_PERI_REG_MASK(SLC_RX_LINK,SLC_RXLINK_DESCADDR_MASK);
@@ -281,11 +335,34 @@ void ICACHE_FLASH_ATTR testi2s_init() {
 	SET_PERI_REG_MASK(I2SCONF,I2S_I2S_RESET_MASK);
 	CLEAR_PERI_REG_MASK(I2SCONF,I2S_I2S_RESET_MASK);
 
-	CLEAR_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN|(I2S_I2S_RX_FIFO_MOD<<I2S_I2S_RX_FIFO_MOD_S)|(I2S_I2S_TX_FIFO_MOD<<I2S_I2S_TX_FIFO_MOD_S));
+	CLEAR_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN|(I2S_I2S_RX_FIFO_MOD<<I2S_I2S_RX_FIFO_MOD_S)|
+			(I2S_I2S_TX_FIFO_MOD<<I2S_I2S_TX_FIFO_MOD_S)|
+			(I2S_I2S_TX_DATA_NUM<<I2S_I2S_TX_DATA_NUM_S)|
+			(I2S_I2S_RX_DATA_NUM<<I2S_I2S_RX_DATA_NUM_S) );
+		//Tried changing various values for I2S_I2S_RX_FIFO_MOD_S, etc... no effect.
+
 	SET_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN);
 	WRITE_PERI_REG(I2SRXEOF_NUM, RX_NUM);
+/*
+	//Trying to play with these... 	  No effect.
+	SET_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN |
+		(0x10<<I2S_I2S_TX_DATA_NUM_S) | (0x20<<I2S_I2S_RX_DATA_NUM_S)
+	);
 
+	//I2S_I2S_RX_FIFO_MOD_S>=4 = no interrupts in at all. Other modes vary.
+	SET_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN |
+		(0x01<<I2S_I2S_RX_FIFO_MOD_S) | (0x01<<I2S_I2S_TX_FIFO_MOD_S)
+	);
+	
+*/
+//No effect :(
+//	WRITE_PERI_REG( I2SCONF_SIGLE_DATA, 32*4 );
+
+
+
+	//Playing with these shows no impact unless specifically selected to be wrong.  (no effect)
 	CLEAR_PERI_REG_MASK(I2SCONF_CHAN, (I2S_TX_CHAN_MOD<<I2S_TX_CHAN_MOD_S)|(I2S_RX_CHAN_MOD<<I2S_RX_CHAN_MOD_S));
+	SET_PERI_REG_MASK(I2SCONF_CHAN, (0<<I2S_TX_CHAN_MOD_S)|(0<<I2S_RX_CHAN_MOD_S));
 
 	//Clear int
 	SET_PERI_REG_MASK(I2SINT_CLR,   I2S_I2S_TX_REMPTY_INT_CLR|I2S_I2S_TX_WFULL_INT_CLR|
@@ -322,16 +399,44 @@ void ICACHE_FLASH_ATTR testi2s_init() {
 
 void SendI2SPacket( uint32_t * pak, uint16_t dwords )
 {
-	i2stxdone = 0;
+	int firstdwords = dwords;
+	int seconddwords = 0;
+	if( dwords > 1008 )
+	{
+		firstdwords = 1008;
+		seconddwords = dwords-1008;
+	}
+
+	while( !i2stxdone );
+
 	i2sBufDescTX[2].owner=1;
 	i2sBufDescTX[2].eof=1;
 	i2sBufDescTX[2].sub_sof=0;
-	i2sBufDescTX[2].datalen=dwords*4;
-	i2sBufDescTX[2].blocksize=dwords*4;
+	i2sBufDescTX[2].datalen=firstdwords*4;
+	i2sBufDescTX[2].blocksize=16;
 	i2sBufDescTX[2].buf_ptr=(uint32_t)pak;
-	i2sBufDescTX[2].unused=1;
+	i2sBufDescTX[2].unused=2;
 	i2sBufDescTX[2].next_link_ptr= (int)(&i2sBufDescTX[0]);
-	i2sBufDescTX[1].next_link_ptr= (int)(&i2sBufDescTX[2]);
+
+	if( seconddwords )
+	{
+		i2sBufDescTX[3].owner=1;
+		i2sBufDescTX[3].eof=1;
+		i2sBufDescTX[3].sub_sof=0;
+		i2sBufDescTX[3].datalen=seconddwords*4;
+		i2sBufDescTX[3].blocksize=16;
+		i2sBufDescTX[3].buf_ptr=(uint32_t)&pak[firstdwords];
+		i2sBufDescTX[3].unused=3;
+		i2sBufDescTX[3].next_link_ptr= (int)(&i2sBufDescTX[0]);
+
+		i2sBufDescTX[2].next_link_ptr= (int)(&i2sBufDescTX[3]);
+	}
+
+	//Link in.
+	//i2sBufDescTX[2].next_link_ptr = (int)(&i2sBufDescTX[3]);
+	tx_link_address = (uint32_t)&i2sBufDescTX[2];
+	//Set our "notdone" flag
+	i2stxdone = 0;
 }
 
 static void	GotNewData( uint32_t * dat, int datlen )
@@ -377,16 +482,15 @@ keep_going:
 			{
 				gotlink = 1;
 				stripe++;
+				if( stripe == 4 )
+				{
+					PacketStoreInSitu = 1;
+					break;
+				}
 			}
 			else
 			{
 				stripe = 0;
-			}
-
-			if( stripe == 4 )
-			{
-				PacketStoreInSitu = 1;
-				break;
 			}
 		}
 

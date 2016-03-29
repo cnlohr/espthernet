@@ -12,6 +12,9 @@
 #include <string.h>
 
 #define sector_SIZE 4096
+//#define PADDING 512
+#define PADDING 1024
+
 int sockfd;
 char recvline[10000];
 
@@ -22,7 +25,7 @@ int PushMatch( const char * match )
 	gettimeofday( &tva, 0 );
 	gettimeofday( &tvb, 0 );
 	int difftime = (tvb.tv_sec-tva.tv_sec)*1000000 + tvb.tv_usec - tva.tv_usec;
-	while( difftime < 500000 ) //3 second timeout.
+	while( difftime < 100000 )
 	{
 		struct pollfd ufds;
 		ufds.fd = sockfd;
@@ -93,9 +96,9 @@ int main(int argc, char**argv)
 	{
 		int tries;
 		int thissuccess;
-		char buffer[1024];
+		char buffer[PADDING];
 		char bufferout[1600];
-		int reads = fread( buffer, 1, 1024, f );
+		int reads = fread( buffer, 1, PADDING, f );
 		int sendplace = offset + devo;
 		int sendsize = reads;
 
@@ -107,7 +110,7 @@ int main(int argc, char**argv)
 			int sel = sprintf( se, "FE%d\r\n", sector );
 	
 			thissuccess = 0;
-			for( tries = 0; tries < 10; tries++ )
+			for( tries = 0; tries < 60; tries++ )
 			{
 				char match[75];
 				printf( "Erase: %d\n", sector );
@@ -134,7 +137,7 @@ int main(int argc, char**argv)
 			int sel = sprintf( se, "FB%d\r\n", block );
 	
 			thissuccess = 0;
-			for( tries = 0; tries < 10; tries++ )
+			for( tries = 0; tries < 60; tries++ )
 			{
 				char match[75];
 				printf( "Erase: %d\n", block );
@@ -161,7 +164,7 @@ resend:
 
 
 		thissuccess = 0;
-		for( tries = 0; tries < 10; tries++ )
+		for( tries = 0; tries < 50; tries++ )
 		{
 			char match[75];
 			sendto( sockfd, bufferout, reads + r, MSG_NOSIGNAL, (struct sockaddr *)&servaddr,sizeof(servaddr));

@@ -14,6 +14,8 @@
 #define BLOCK_SIZE 65536
 #define SECTOR_SIZE 4096
 #define PADDING 1024
+//#define PADDING 512
+
 int sockfd;
 	struct sockaddr_in servaddr,cliaddr;
 

@@ -61,7 +61,7 @@ static inline void et_startsend( uint16_t start ) { sendbaseaddress = ETsendplac
 static inline uint16_t et_get_write_length() { return ETsendplace - sendbaseaddress + 6; } //XXX: Tricky - throw in extra 6 here because dstmac is included.
 
 //End sending (calls xmitpacket with correct flags)	//CLOSURE
-static inline void et_endsend() { et_xmitpacket( sendbaseaddress, ETsendplace - sendbaseaddress ); }
+ICACHE_FLASH_ATTR void et_endsend();
 
 //Deselects the chip, can halt operation.
 static inline void et_stopop() { }

@@ -5,10 +5,13 @@
 
 #define MAX_FRAMELEN (ETBUFFERSIZE)
 
-#define ETBUFFERSIZE (600) //576 is the IP minimum MTU
+#define ETBUFFERSIZE (1548+4) 
+//576 is the IP minimum MTU
+//1536 is the Ethernet MTU, +4 is for CRCs
+
 #define TX_SCRATCHES 1
-#define RX_BUFFER_START 0
-#define RX_BUFFER_END   MAX_FRAMELEN
+#define RX_BUFFER_START MAX_FRAMELEN
+#define RX_BUFFER_END   (MAX_FRAMELEN+MAX_FRAMELEN*RXBUFS)
 
 //ESP middleground
 #define pgm_read_byte( x ) (*((uint8_t*)(x)))
@@ -21,7 +24,7 @@
 #define RXBUFS 2
 #define PTR_TO_RX_BUF( x ) ( ETBUFFERSIZE + x * MAX_FRAMELEN )
 #define RX_BUFFER_SIZE (RXBUFS*MAX_FRAMELEN)
-extern unsigned char ETbuffer[ETBUFFERSIZE+RX_BUFFER_SIZE] __attribute__((aligned(32)));
+extern unsigned char ETbuffer[ETBUFFERSIZE+RX_BUFFER_SIZE] __attribute__((aligned(64)));
 
 
 #endif

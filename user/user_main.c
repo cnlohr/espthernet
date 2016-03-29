@@ -13,6 +13,7 @@
 #include "manchestrate.h"
 #include <mdns.h>
 #include <net_compat.h>
+#include <iparpetc.h>
 
 #define PORT 7777
 
@@ -20,7 +21,6 @@
 #define procTaskQueueLen    1
 
 static volatile os_timer_t some_timer;
-static struct espconn *pUdpServer;
 
 //#define DUMP_DEBUG_ETHERNET
 
@@ -62,19 +62,52 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 	CSTick( 1 );
 }
 
-void HandleUDP( uint16_t len )
+void ICACHE_FLASH_ATTR HandleUDP( uint16_t len )
 {
-	printf( "Got ethernet UDP: %d\n", len );
+	et_pop16(); //Discard checksum.  Already CRC32 the ethernet.
+
+	if( localport != 7878 )
+		return;
+
+	char  __attribute__ ((aligned (32))) retbuf[1300];
+	int r = issue_command( retbuf, 1300, &ETbuffer[ETsendplace], len-8 );
+	et_finish_callback_now();
+
+	if( r > 0 )
+	{
+		et_startsend( 0x0000 );
+		send_etherlink_header( 0x0800 );
+		send_ip_header( 0x00, ipsource, 17 ); //UDP (will fill in size and checksum later)
+		et_push16( localport );
+		et_push16( remoteport );
+		et_push16( 0 ); //length for later
+		et_push16( 0 ); //csum for later
+
+		ets_memcpy( &ETbuffer[ETsendplace], retbuf, r );
+		ETsendplace += r;
+
+		util_finish_udp_packet();
+	}
+
 }
 
-//Called when new packet comes in.
-static void ICACHE_FLASH_ATTR
-udpserver_recv(void *arg, char *pusrdata, unsigned short len)
-{
-	struct espconn *pespconn = (struct espconn *)arg;
 
-	uart0_sendStr("X");
+/*
+void ICACHE_FLASH_ATTR issue_command_udp(void *arg, char *pusrdata, unsigned short len)
+{
+	char  __attribute__ ((aligned (32))) retbuf[1300];
+	int r = issue_command( retbuf, 1300, pusrdata, len );
+	if( r > 0 )
+	{
+		struct espconn * rc = (struct espconn *)arg;
+		remot_info * ri = 0;
+		espconn_get_connection_info( rc, &ri, 0);
+		ets_memcpy( rc->proto.udp->remote_ip, ri->remote_ip, 4 );
+		rc->proto.udp->remote_port = ri->remote_port;
+		espconn_sendto( rc, retbuf, r );
+	}
 }
+*/
 
 void ICACHE_FLASH_ATTR charrx( uint8_t c )
 {
@@ -85,7 +118,7 @@ void ICACHE_FLASH_ATTR user_init(void)
 {
 	uart_init(BIT_RATE_115200, BIT_RATE_115200);
 
-	uart0_sendStr("\r\nesp8266 ws2812 driver\r\n");
+	uart0_sendStr("\r\nesp8266 driver\r\n");
 
 //	int opm = wifi_get_opmode();
 //	if( opm == 1 ) need_to_switch_opmode = 120;
@@ -93,9 +126,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 //Uncomment this to force a system restore.
 
 
-//	system_restore();
+	system_restore();
 
-#define FORCE_SSID 1
+#define FORCE_SSID 0
 
 #if FORCE_SSID
 
@@ -132,19 +165,6 @@ void ICACHE_FLASH_ATTR user_init(void)
 	}
 #endif
 
-    pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
-	ets_memset( pUdpServer, 0, sizeof( struct espconn ) );
-	espconn_create( pUdpServer );
-	pUdpServer->type = ESPCONN_UDP;
-	pUdpServer->proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
-	pUdpServer->proto.udp->local_port = 7777;
-	espconn_regist_recvcb(pUdpServer, udpserver_recv);
-
-	if( espconn_create( pUdpServer ) )
-	{
-		while(1) { uart0_sendStr( "\r\nFAULT\r\n" ); }
-	}
-
 	CSInit();
 
 	SetServiceName( "i2sdup" );
@@ -176,12 +196,11 @@ void ICACHE_FLASH_ATTR user_init(void)
 //There is no code in this project that will cause reboots if interrupts are disabled.
 void EnterCritical()
 {
-	StopI2S();
+//	StopI2S();
 }
 
 void ExitCritical()
 {
-	StartI2S();
+//	StartI2S();
 }
-
 

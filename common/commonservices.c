@@ -246,9 +246,13 @@ int ICACHE_FLASH_ATTR issue_command(char * buffer, int retsize, char *pusrdata, 
 		}
 	case 'f': case 'F':  //Flashing commands (F_)
 	{
+		static uint8_t lasterase = -1;
+
 		flashchip->chip_size = 0x01000000;
 		const char * colon = (const char *) ets_strstr( (char*)&pusrdata[2], "\t" );
 		int nr = my_atoi( &pusrdata[2] );
+
+		if( pusrdata[1] != 'b' && pusrdata[1] != 'B' ) lasterase = -1;
 
 		switch (pusrdata[1])
 		{
@@ -276,9 +280,13 @@ int ICACHE_FLASH_ATTR issue_command(char * buffer, int retsize, char *pusrdata, 
 				break;
 			}
 
-			EnterCritical();
-			SPIEraseBlock( nr );
-			ExitCritical();
+			if( nr != lasterase )
+			{
+				EnterCritical();
+				SPIEraseBlock( nr );
+				lasterase = nr;
+				ExitCritical();
+			}
 
 			buffend += ets_sprintf(buffend, "FB%d\r\n", nr );
 			break;

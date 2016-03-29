@@ -326,7 +326,6 @@ static void HandleICMP()
 	unsigned short payload_from_start, payload_dest_start;
 
 	icmp_in++;
-
 	type = POP;
 	POP; //code
 	POP16; //Checksum
@@ -393,7 +392,7 @@ static void HandleICMP()
 
 
 		icmp_out++;
-
+//		printf( "%d\n", icmp_out );
 		break;
 	}
 

@@ -296,11 +296,11 @@ ICACHE_FLASH_ATTR void ConfigNLP()
 }
 
 #else
-
+/*
 //Send out an NLP pulse. This NLP unfortunately identifies us at 10-base-T, half-duplex.
 ICACHE_FLASH_ATTR void SendNLP()
 {
-	static uint32_t nlpsend[5] = { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x0000000f };
+	static uint32_t nlpsend[5] = { 0x00000000, 0x00000000, 0x0000001f, 0x00000000 };
 	if( i2stxdone )
 	{
 		SendI2SPacket( nlpsend, sizeof( nlpsend ) / 4 );
@@ -317,7 +317,9 @@ ICACHE_FLASH_ATTR void ConfigNLP()
 	os_timer_disarm(&nlp_timer);
 	os_timer_setfn(&nlp_timer, (os_timer_func_t *)SendNLP, NULL);
 	os_timer_arm(&nlp_timer, 16, 1);
-}
+}*/
+ICACHE_FLASH_ATTR void ConfigNLP()
+{}
 
 #endif
 
@@ -396,7 +398,12 @@ int8_t et_init( const unsigned char * macaddy )
 	return 0;
 }
 
-int8_t et_xmitpacket( uint16_t start, uint16_t len )
+void ICACHE_FLASH_ATTR et_endsend()
+{
+	et_xmitpacket( sendbaseaddress, ETsendplace - sendbaseaddress );
+}
+
+int8_t ICACHE_FLASH_ATTR et_xmitpacket( uint16_t start, uint16_t len )
 {
 	//If we're here, ETbuffer[start] points to the first byte (dst MAC address)
 	//Gotta calculate the checksum.
