@@ -26,6 +26,7 @@
 #define RX_BUFFER_SIZE (RXBUFS*MAX_FRAMELEN)
 extern unsigned char ETbuffer[ETBUFFERSIZE+RX_BUFFER_SIZE] __attribute__((aligned(64)));
 
+#define TABLE_CRC
 
 #endif
 

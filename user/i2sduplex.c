@@ -110,9 +110,6 @@ LOCAL void slc_isr(void) {
 			i2sBufDescTX[1].next_link_ptr = (int)&i2sBufDescTX[0];
 		}
 
-
-
-
 		slc_intr_status &= ~SLC_RX_EOF_INT_ST;
 		etx++;
 	}
@@ -131,7 +128,24 @@ LOCAL void slc_isr(void) {
 		gotdma=1;
 		gotlink = 1;
 #else
+#ifdef PROFILE_GOTNEWDATA
+		static int i = 0;
+		uint32_t k;
+		i++;
+		if( i == 1000 )
+		{
+			k = system_get_time();
+		}
+#endif
 		GotNewData( (uint32_t*) finishedDesc->buf_ptr, I2SDMABUFLEN );
+#ifdef PROFILE_GOTNEWDATA
+		if( i == 1000 )
+		{
+			k -=  system_get_time();
+			printf( "RT: %d\n",  k );
+			i = 0;
+		}
+#endif
 #endif
 
 		erx++;
@@ -397,7 +411,7 @@ keep_going:
 	if( PacketStoreInSitu < 0 )
 	{
 		//Search for until data is ffffffff or 00000000.  This would be if we think we hit the end of a packet or a bad packet.  Just speed along till the bad dream is over.
-		for( ; i < datlen; i++ )
+		for( ; i < datlen; i+=2 )
 		{
 			uint32_t d = dat[i];
 
@@ -419,7 +433,7 @@ keep_going:
 	if( PacketStoreInSitu == 0 )
 	{
 		//Quescent state.
-		for( ; i < datlen; i++ )
+		for( ; i < datlen; i+=2 )
 		{
 			uint32_t d = dat[i];
 
@@ -428,7 +442,7 @@ keep_going:
 			{
 				gotlink = 1;
 				stripe++;
-				if( stripe == 4 )
+				if( stripe == 3 )
 				{
 					PacketStoreInSitu = 1;
 					break;
@@ -467,7 +481,7 @@ keep_going:
 		}
 
 #endif
-		i += 2;
+		i ++;
 
 	}
 
@@ -520,6 +534,7 @@ keep_going:
 
 	//Packet is complete, or error in packet.  No matter what, we have to finish off the packet next time.
 	PacketStoreInSitu = -1;
+
 #ifdef ALLOW_FRAME_DEBUGGING
 	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
 	{

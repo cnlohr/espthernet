@@ -17,6 +17,7 @@ SRCS:=driver/uart.c \
 	user/user_main.c \
 	user/manchestrate.c \
 	etherhelp/net_compat.c \
+	etherhelp/crc32.c \
 	etherhelp/iparpetc.c
 
 

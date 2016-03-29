@@ -4,6 +4,7 @@
 #include <i2sduplex.h>
 #include <manchestrate.h>
 #include <osapi.h>
+#include "crc32.h"
 
 void SendNLP();
 
@@ -22,26 +23,6 @@ unsigned char MyMask[4] = { 255, 0, 0, 0 };
 int pendingnlp = 0;
 
 //Internal functs
-
-ICACHE_FLASH_ATTR uint32_t crc32b(uint32_t crc, unsigned char *message, int len) {
-   int i, j;
-   uint32_t mask;
-	uint8_t byte;
-
-   i = 0;
-//   crc = 0xFFFFFFFF;
-	crc = ~crc;
-   while (i < len) {
-      byte = message[i];            // Get next byte.
-      crc = crc ^ byte;
-      for (j = 7; j >= 0; j--) {    // Do eight times.
-         mask = -(crc & 1);
-         crc = (crc >> 1) ^ (0xEDB88320 & mask);
-      }
-      i = i + 1;
-   }
-   return ~crc;
-}
 
 ICACHE_FLASH_ATTR uint16_t internet_checksum( const unsigned char * start, uint16_t len )
 {
@@ -159,7 +140,7 @@ g_process_paktime += system_get_time();
 				printf( "\n" );
 #endif
 				int byr = current_packet_rec_place;
-				uint32_t cmpcrc = crc32b( 0, ETbuffer, byr - 4 );
+				uint32_t cmpcrc = crc32( ETbuffer, byr - 4 );
 				uint32_t checkcrc = (ETbuffer[byr-1] << 24)|(ETbuffer[byr-2] << 16)|(ETbuffer[byr-3] << 8)|(ETbuffer[byr-4]);
 
 				if( cmpcrc == checkcrc )
@@ -194,7 +175,7 @@ void et_backend_tick_quick()
 		uint16_t byr = rx_pack_lens[i];
 		uint16_t sendplace = PTR_TO_RX_BUF(i);
 
-		uint32_t cmpcrc = crc32b( 0, ETbuffer+sendplace, byr - 4 );
+		uint32_t cmpcrc = crc32( ETbuffer+sendplace, byr - 4 );
 
 		uint32_t checkcrc = (ETbuffer[sendplace+byr-1] << 24)|(ETbuffer[sendplace+byr-2] << 16)|(ETbuffer[sendplace+byr-3] << 8)|(ETbuffer[sendplace+byr-4]);
 
@@ -413,7 +394,7 @@ int8_t ICACHE_FLASH_ATTR et_xmitpacket( uint16_t start, uint16_t len )
 	len = ((len-1) & 0xfffc) + 4; //round up to 4.
 
 	uint8_t  * buffer = &ETbuffer[start];
-	uint32_t crc = crc32b( 0, buffer, len );
+	uint32_t crc = crc32( buffer, len );
 	uint16_t i = start + len;
 	
 	buffer[i++] = crc & 0xff;
