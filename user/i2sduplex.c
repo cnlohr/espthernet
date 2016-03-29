@@ -47,53 +47,19 @@ static void	GotNewData( uint32_t * dat, int datlen );
 
 void KickRX()
 {
-/*	int x;
-	SET_PERI_REG_MASK(SLC_CONF0, SLC_TXLINK_RST);
-	CLEAR_PERI_REG_MASK(SLC_CONF0, SLC_TXLINK_RST);
-
-	CLEAR_PERI_REG_MASK(I2SCONF,I2S_I2S_TX_START);
-
-	CLEAR_PERI_REG_MASK(SLC_TX_LINK, SLC_TXLINK_START);
-	SET_PERI_REG_MASK(SLC_CONF0, SLC_TXLINK_RST);
-
-	CLEAR_PERI_REG_MASK(SLC_CONF0, SLC_TXLINK_RST);
-
-	for (x=0; x<DMABUFFERDEPTH; x++) {
-		i2sBufDescRX[x].owner=1;
-		i2sBufDescRX[x].eof=1;
-		i2sBufDescRX[x].sub_sof=0;
-		i2sBufDescRX[x].datalen=I2SDMABUFLEN*4;
-		i2sBufDescRX[x].blocksize=I2SDMABUFLEN*4;
-		i2sBufDescRX[x].buf_ptr=(uint32_t)&i2sBDRX[x*I2SDMABUFLEN];
-		i2sBufDescRX[x].unused=0;
-		i2sBufDescRX[x].next_link_ptr=(int)((x<(DMABUFFERDEPTH-1))?(&i2sBufDescRX[x+1]):(&i2sBufDescRX[0]));
-	}
-
-
-	CLEAR_PERI_REG_MASK(SLC_TX_LINK,SLC_TXLINK_DESCADDR_MASK);
-	SET_PERI_REG_MASK(SLC_TX_LINK, ((uint32)&i2sBufDescRX[0]) & SLC_RXLINK_DESCADDR_MASK);
-	SET_PERI_REG_MASK(SLC_TX_LINK, SLC_TXLINK_START);
-	SET_PERI_REG_MASK(I2SCONF,I2S_I2S_TX_START);
-	//Doesn't seem to work.
-
-*/
 	testi2s_init();
 }
 
 void StartI2S()
 {
-//	testi2s_init();
 	SET_PERI_REG_MASK(SLC_TX_LINK, SLC_TXLINK_START);
 	SET_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_START);
-
 }
 
 void StopI2S()
 {
 	CLEAR_PERI_REG_MASK(SLC_TX_LINK, SLC_TXLINK_START);
 	CLEAR_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_START);
-//	WRITE_PERI_REG(SLC_INT_CLR, 0xffffffff);//slc_intr_status);
-//	SET_PERI_REG_MASK(SLC_CONF0, SLC_TX_LOOP_TEST |SLC_RXLINK_RST|SLC_TXLINK_RST|SLC_AHBM_RST | SLC_AHBM_FIFO_RST  );
 }
 
 LOCAL void slc_isr(void) {
@@ -146,29 +112,6 @@ LOCAL void slc_isr(void) {
 
 
 
-/*
-		if( !i2stxdone && finishedDesc->unused == 0 )
-		{
-			i2sBufDescTX[2].next_link_ptr=(int)(&i2sBufDescTX[0]);
-			i2stxdone = 1;
-		}
-
-		if( finishedDesc->unused == 6 )
-		{
-			i2sBufDescTX[1].next_link_ptr=(int)(&i2sBufDescTX[2]);
-		}
-
-		if( finishedDesc->unused == 2 )
-		{
-			static uint8_t nonlpcount;
-			nonlpcount++;
-
-			if( nonlpcount > ((40000*16)/(I2STXZERO*32*3)) )
-			{
-				i2sBufDescTX[1].next_link_ptr=(int)(&i2sBufDescNLP);
-				nonlpcount = 0;
-			}
-		} */
 
 		slc_intr_status &= ~SLC_RX_EOF_INT_ST;
 		etx++;
@@ -300,8 +243,8 @@ void ICACHE_FLASH_ATTR testi2s_init() {
 	SET_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_INFOR_NO_REPLACE|SLC_TOKEN_NO_REPLACE); //Do this according to 8p-esp8266_i2s_module ... page 6/9  I can't see any impact.
 
 //	CLEAR_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_RX_FILL_EN); //??? Just some junk I tried.
-	SET_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_RX_FILL_EN); //??? Just some junk I tried.
-	SET_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_RX_FILL_MODE); //??? Just some junk I tried.
+//	SET_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_RX_FILL_EN); //??? Just some junk I tried.
+//	SET_PERI_REG_MASK(SLC_RX_DSCR_CONF,SLC_RX_FILL_MODE); //??? Just some junk I tried.
 
 
 	CLEAR_PERI_REG_MASK(SLC_TX_LINK,SLC_TXLINK_DESCADDR_MASK);
