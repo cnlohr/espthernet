@@ -128,7 +128,7 @@ void ICACHE_FLASH_ATTR user_init(void)
 
 	system_restore();
 
-#define FORCE_SSID 0
+#define FORCE_SSID 1
 
 #if FORCE_SSID
 

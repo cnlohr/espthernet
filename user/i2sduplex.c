@@ -120,23 +120,21 @@ LOCAL void slc_isr(void) {
 	{
 		finishedDesc=(struct sdio_queue*)READ_PERI_REG(SLC_TX_EOF_DES_ADDR);
 
+
 //XXX WARNING Why does undeflow detection not work!?!?
 #define DETECT_UNDERFLOWS
 #ifdef DETECT_UNDERFLOWS
-		static int8_t expected_next = 1;
-		int8_t mep1 = (finishedDesc->unused + 1) % DMABUFFERDEPTH;
-		int8_t i = expected_next;
-		if( i != mep1 ) printf( "Underflow.\n" );
-		expected_next = mep1;
+		static struct sdio_queue * expected_next = &i2sBufDescRX[0];
+		if( finishedDesc != expected_next ) printf( "U\n" );
+		expected_next = (struct sdio_queue *)finishedDesc->next_link_ptr;
 #endif
 		GotNewData( (uint32_t*) finishedDesc->buf_ptr, I2SDMABUFLEN );
 		erx++;
-		finishedDesc->owner=1;
+
+		finishedDesc->owner=1;  //Return to the i2s subsystem
 
 		//Don't know why - but this MUST be done, otherwise everything comes to a screeching halt.
 		slc_intr_status &= ~SLC_TX_EOF_INT_ST;
-
-//		if( kg ) goto keepgoing;
 	}
 	if( slc_intr_status & SLC_TX_DSCR_ERR_INT_ST ) //RX Fault, maybe owner was not set fast enough?
 	{
