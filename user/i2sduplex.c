@@ -120,15 +120,20 @@ LOCAL void slc_isr(void) {
 	{
 		finishedDesc=(struct sdio_queue*)READ_PERI_REG(SLC_TX_EOF_DES_ADDR);
 
-
-//XXX WARNING Why does undeflow detection not work!?!?
-#define DETECT_UNDERFLOWS
+//#define DETECT_UNDERFLOWS
 #ifdef DETECT_UNDERFLOWS
 		static struct sdio_queue * expected_next = &i2sBufDescRX[0];
-		if( finishedDesc != expected_next ) printf( "U\n" );
+		if( finishedDesc != expected_next ) uart0_sendStr( "U" );
 		expected_next = (struct sdio_queue *)finishedDesc->next_link_ptr;
 #endif
+
+#ifdef DUMMY_DONT_DO_DATA
+		gotdma=1;
+		gotlink = 1;
+#else
 		GotNewData( (uint32_t*) finishedDesc->buf_ptr, I2SDMABUFLEN );
+#endif
+
 		erx++;
 
 		finishedDesc->owner=1;  //Return to the i2s subsystem
@@ -189,7 +194,7 @@ void ICACHE_FLASH_ATTR testi2s_init() {
 		i2sBufDescRX[x].datalen=I2SDMABUFLEN*4;
 		i2sBufDescRX[x].blocksize=I2SDMABUFLEN*4;
 		i2sBufDescRX[x].buf_ptr=(uint32_t)&i2sBDRX[x*I2SDMABUFLEN];
-		i2sBufDescRX[x].unused=x;
+		i2sBufDescRX[x].unused=0;
 		i2sBufDescRX[x].next_link_ptr=(int)((x<(DMABUFFERDEPTH-1))?(&i2sBufDescRX[x+1]):(&i2sBufDescRX[0]));
 		for( y = 0; y < I2SDMABUFLEN; y++ )
 		{

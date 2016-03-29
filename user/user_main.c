@@ -167,9 +167,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 
 	CSInit();
 
-	SetServiceName( "i2sdup" );
+	SetServiceName( "espthernet" );
 	AddMDNSName( "cn8266" );
-	AddMDNSName( "ws2812" );
+	AddMDNSName( "espthernet" );
 	AddMDNSService( "_http._tcp", "An ESP8266 Webserver", 80 );
 	AddMDNSService( "_cn8266._udp", "ESP8266 Backend", 7878 );
 
