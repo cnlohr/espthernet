@@ -100,6 +100,7 @@ LOCAL void slc_isr(void) {
 				}
 
 				//XXX TODO: This code is likely wrong.  We need to hadle the interplay between NLPs and heavy traffic a lot better.
+				//WARNING Try it before and after!!!
 				if( waitcount > 4 )
 				{
 				
