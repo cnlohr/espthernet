@@ -10,8 +10,8 @@
 //1536 is the Ethernet MTU, +4 is for CRCs
 
 #define TX_SCRATCHES 1
-#define RX_BUFFER_START MAX_FRAMELEN
-#define RX_BUFFER_END   (MAX_FRAMELEN+MAX_FRAMELEN*RXBUFS)
+#define RX_BUFFER_START (MAX_FRAMELEN+TCP_BUFFERS)
+#define RX_BUFFER_END   (MAX_FRAMELEN+TCP_BUFFERS+RX_BUFFER_SIZE)
 
 //ESP middleground
 #define pgm_read_byte( x ) (*((uint8_t*)(x)))
@@ -20,11 +20,15 @@
 
 #define ALLOW_FRAME_DEBUGGING
 
+#define TCPS 5
+
+#define TCP_BUFFERS (TCPS*MAX_FRAMELEN)
+
 
 #define RXBUFS 2
 #define PTR_TO_RX_BUF( x ) ( ETBUFFERSIZE + x * MAX_FRAMELEN )
 #define RX_BUFFER_SIZE (RXBUFS*MAX_FRAMELEN)
-extern unsigned char ETbuffer[ETBUFFERSIZE+RX_BUFFER_SIZE] __attribute__((aligned(64)));
+extern unsigned char ETbuffer[RX_BUFFER_END] __attribute__((aligned(64)));
 
 #define TABLE_CRC
 

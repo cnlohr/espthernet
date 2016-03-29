@@ -25,7 +25,7 @@ int PushMatch( const char * match )
 	gettimeofday( &tva, 0 );
 	gettimeofday( &tvb, 0 );
 	int difftime = (tvb.tv_sec-tva.tv_sec)*1000000 + tvb.tv_usec - tva.tv_usec;
-	while( difftime < 500000 ) //3 second timeout.
+	while( difftime < 100000 ) //100ms second timeout.
 	{
 		struct pollfd ufds;
 		ufds.fd = sockfd;

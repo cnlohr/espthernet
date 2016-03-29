@@ -1,4 +1,7 @@
+//Copyright 2016 <>< Charles Lohr, see LICENSE file.
+
 //ESP8266 I2S Input+Output
+//This is BASED OFF OF, but DIFFERENT THAN the github project http://github.com/cnlohr/esp8266duplexi2s
 
 #include "slc_register.h"
 #include "mystuff.h"
@@ -76,8 +79,6 @@ LOCAL void slc_isr(void) {
 	//clear all intr flags
 	WRITE_PERI_REG(SLC_INT_CLR, 0xffffffff);//slc_intr_status);
 
-
-//printf( "%08x\n", slc_intr_status );
 	if ( (slc_intr_status & SLC_RX_EOF_INT_ST))
 	{
 		finishedDesc=(struct sdio_queue*)READ_PERI_REG(SLC_RX_EOF_DES_ADDR);
@@ -128,6 +129,8 @@ LOCAL void slc_isr(void) {
 		gotdma=1;
 		gotlink = 1;
 #else
+
+//#define DETECT_UNDERFLOWS
 #ifdef PROFILE_GOTNEWDATA
 		static int i = 0;
 		uint32_t k;
@@ -393,12 +396,16 @@ void SendI2SPacket( uint32_t * pak, uint16_t dwords )
 	}
 
 	//Link in.
-	//i2sBufDescTX[2].next_link_ptr = (int)(&i2sBufDescTX[3]);
 	tx_link_address = (uint32_t)&i2sBufDescTX[2];
+
 	//Set our "notdone" flag
 	i2stxdone = 0;
 }
 
+
+//Process a bundle from the i2s engine. 
+//
+//This is called from within the i2s interrupt. 
 static void	GotNewData( uint32_t * dat, int datlen )
 {
 	int i = 0;
@@ -408,9 +415,13 @@ static void	GotNewData( uint32_t * dat, int datlen )
 	gotdma=1;
 
 keep_going:
+
+
+	//Search for until data is ffffffff or 00000000.
+	//This would be if we think we hit the end of a packet or a bad packet.
+	//Just speed along till the bad dream is over.
 	if( PacketStoreInSitu < 0 )
 	{
-		//Search for until data is ffffffff or 00000000.  This would be if we think we hit the end of a packet or a bad packet.  Just speed along till the bad dream is over.
 		for( ; i < datlen; i+=2 )
 		{
 			uint32_t d = dat[i];
@@ -430,6 +441,7 @@ keep_going:
 	}
 
 	//Otherwise we're looking for several non-zero packets in a row.
+	//This would indicate a start of a packet.
 	if( PacketStoreInSitu == 0 )
 	{
 		//Quescent state.
@@ -454,7 +466,7 @@ keep_going:
 			}
 		}
 
-		//Nothing interesting happened all packet.
+		//Nothing interesting happened all packet.  Return back to the host.
 		if( !PacketStoreInSitu )
 			return;
 
@@ -479,10 +491,10 @@ keep_going:
 			PacketStoreLength = 0;
 			g_process_paktime = 0;
 		}
-
 #endif
+		//We can safely skip a free word since preambles are so long.
+		//Do this for performance reasons.
 		i ++;
-
 	}
 
 #ifdef ALLOW_FRAME_DEBUGGING
@@ -538,8 +550,9 @@ keep_going:
 #ifdef ALLOW_FRAME_DEBUGGING
 	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
 	{
-		int trim = (datlen-r);
+		int trim = (datlen-i);
 		trim--;
+
 		if( trim < 0 ) trim = 0;
 		if( trim > PacketStoreLength - 10 ) trim = (PacketStoreLength-10);
 		PacketStoreLength -= trim;

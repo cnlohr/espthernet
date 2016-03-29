@@ -1,4 +1,4 @@
-//Copyright 2015 <>< Charles Lohr, see LICENSE file.
+//Copyright 2016 <>< Charles Lohr, see LICENSE file.
 
 #include "mem.h"
 #include "c_types.h"
@@ -37,7 +37,6 @@ char * strcat( char * dest, char * src )
 }
 
 
-
 //Tasks that happen all the time.
 
 os_event_t    procTaskQueue[procTaskQueueLen];
@@ -64,7 +63,7 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 
 void ICACHE_FLASH_ATTR HandleUDP( uint16_t len )
 {
-	et_pop16(); //Discard checksum.  Already CRC32 the ethernet.
+	et_pop16(); //Discard checksum.  Already CRC32'd the ethernet.
 
 	if( localport != 7878 )
 		return;
@@ -75,6 +74,7 @@ void ICACHE_FLASH_ATTR HandleUDP( uint16_t len )
 
 	if( r > 0 )
 	{
+		//Using avrcraft, this is how you send "reply" UDP packets manually.
 		et_startsend( 0x0000 );
 		send_etherlink_header( 0x0800 );
 		send_ip_header( 0x00, ipsource, 17 ); //UDP (will fill in size and checksum later)
@@ -92,23 +92,6 @@ void ICACHE_FLASH_ATTR HandleUDP( uint16_t len )
 }
 
 
-/*
-void ICACHE_FLASH_ATTR issue_command_udp(void *arg, char *pusrdata, unsigned short len)
-{
-	char  __attribute__ ((aligned (32))) retbuf[1300];
-	int r = issue_command( retbuf, 1300, pusrdata, len );
-	if( r > 0 )
-	{
-		struct espconn * rc = (struct espconn *)arg;
-		remot_info * ri = 0;
-		espconn_get_connection_info( rc, &ri, 0);
-		ets_memcpy( rc->proto.udp->remote_ip, ri->remote_ip, 4 );
-		rc->proto.udp->remote_port = ri->remote_port;
-		espconn_sendto( rc, retbuf, r );
-	}
-}
-*/
-
 void ICACHE_FLASH_ATTR charrx( uint8_t c )
 {
 	//Called from UART.
@@ -120,13 +103,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 
 	uart0_sendStr("\r\nesp8266 driver\r\n");
 
-//	int opm = wifi_get_opmode();
-//	if( opm == 1 ) need_to_switch_opmode = 120;
-//	wifi_set_opmode_current(2);
+
 //Uncomment this to force a system restore.
-
-
-	system_restore();
+//	system_restore();
 
 #define FORCE_SSID 1
 
@@ -167,6 +146,7 @@ void ICACHE_FLASH_ATTR user_init(void)
 
 	CSInit();
 
+	//Note: MDNS is currently disabled in this project.
 	SetServiceName( "espthernet" );
 	AddMDNSName( "cn8266" );
 	AddMDNSName( "espthernet" );
@@ -196,11 +176,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 //There is no code in this project that will cause reboots if interrupts are disabled.
 void EnterCritical()
 {
-//	StopI2S();
 }
 
 void ExitCritical()
 {
-//	StartI2S();
 }
 

@@ -8,7 +8,7 @@
 
 void SendNLP();
 
-unsigned char ETbuffer[ETBUFFERSIZE+RX_BUFFER_SIZE] __attribute__((aligned(32)));
+unsigned char ETbuffer[RX_BUFFER_END] __attribute__((aligned(32)));
 
 unsigned short ETsendplace;
 uint16_t sendbaseaddress;

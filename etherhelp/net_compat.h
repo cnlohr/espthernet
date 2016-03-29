@@ -3,6 +3,8 @@
 
 //enc424j600 compat lib.
 //We're using the IP library from AVRCraft... but we're using our own PHY+MAC
+//I really like the boundaries the enc424j600 set up, and it lends itself to a TCP/IP stack
+//that can be very, very small and high performance.  Better than lwip or regular sockets.
 
 //TODO: Should probably use Timer1 (since we can't use Timer0)
 //to make sure we send media detect pulses at the right points.
@@ -15,7 +17,6 @@
 
 //You must define 'mymac'
 extern unsigned char MyMAC[6];
-extern unsigned char ETbuffer[ETBUFFERSIZE+RX_BUFFER_SIZE] __attribute__((aligned(32)));
 extern unsigned short ETsendplace;
 //For telling where the current transaction started.
 extern uint16_t sendbaseaddress;
