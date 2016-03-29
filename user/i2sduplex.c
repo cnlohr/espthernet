@@ -99,6 +99,7 @@ LOCAL void slc_isr(void) {
 					nonlpcount = 0;
 				}
 
+				//XXX TODO: This code is likely wrong.  We need to hadle the interplay between NLPs and heavy traffic a lot better.
 				if( waitcount > 4 )
 				{
 				
