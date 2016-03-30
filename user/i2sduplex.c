@@ -18,9 +18,21 @@
 
 //I2S DMA buffer descriptors
 static struct sdio_queue i2sBufDescRX[DMABUFFERDEPTH];
-static struct sdio_queue i2sBufDescTX[4];
+static struct sdio_queue i2sBufDescTX[6];
 static struct sdio_queue i2sBufDescNLP;
 static uint32_t I2SNLP[4] = { 0x00000000, 0x00000000, 0x0000001f, 0x00000000 };
+
+
+//State machine:
+//   [0] -> [1] -> [0]
+//   [2] -> [3] -> [2]
+//
+// When inserting a new packet:
+//   [3] -> [2]
+//   [0] -> [1] -> NEW PACKET -> [2] -> [3] -> [2] -> [3]
+// Then, in the interrupt we repair it and setup for reset...  [1] -> [0], [3]->[0]
+//
+// NLPs also point to 2 when inserted.
 
 uint32_t i2sBDRX[I2SDMABUFLEN*DMABUFFERDEPTH];
 uint32_t i2sBDTX[I2STXZERO];
@@ -28,25 +40,18 @@ uint32_t i2sBDTX[I2STXZERO];
 uint8_t gotdma;
 uint8_t gotlink;
 
-extern uint32_t g_process_paktime;
-
 volatile uint32_t last_unknown_int;
 int erx, etx;
 
 volatile uint32_t tx_link_address;
 volatile uint8_t i2stxdone;
 
-
-#ifdef ALLOW_FRAME_DEBUGGING
-//For storing packets when they come in, so they can be processed in the main loop.
-uint32_t PacketStore[STOPKTSIZE];
-uint16_t PacketStoreLength; 
-int8_t   KeepNextPacket = 0;
-#endif
-int8_t   PacketStoreInSitu = 0;
+static uint32_t nlpcount;  //Bytes that have passed since last NLP (in 200ns units)
+static uint8_t insend;     //0 = Not sending, 1 = Sending NLP, 2 = Sending Data.
 
 
-static void	GotNewData( uint32_t * dat, int datlen );
+
+void	GotNewI2SData( uint32_t * dat, int datlen );
 
 void KickRX()
 {
@@ -81,48 +86,47 @@ LOCAL void slc_isr(void) {
 
 	if ( (slc_intr_status & SLC_RX_EOF_INT_ST))
 	{
-		static uint8_t waitcount;
+		//NLPs every 16ms
+		#define NLP_EVERY ((40000000/8)/62.5)
 		finishedDesc=(struct sdio_queue*)READ_PERI_REG(SLC_RX_EOF_DES_ADDR);
 
-		if( finishedDesc->unused == 0 )
+		//Watch how many bits we're sending to determine when we need to send an NLP.
+		nlpcount += finishedDesc->datalen;
+
+		//Currently done transmitting a packet/nlp.
+		//Warning: This code may be executed multiple times per packet.
+	//	printf( "%d", finishedDesc->unused );
+		if( finishedDesc->unused == 3 && insend )
 		{
-			static uint8_t nonlpcount;
+			//Relink the arrays, all back to the 0/1 loop.
+			i2sBufDescTX[1].next_link_ptr= (int)(&i2sBufDescTX[0]);
+			i2sBufDescTX[3].next_link_ptr= (int)(&i2sBufDescTX[0]);
 
-			if( tx_link_address == 0 )
+			//If it was an NLP, clear the NLP.
+			if( insend == 2 )
 			{
-
-				//Handle NLPs
-				nonlpcount++;
-				if( nonlpcount > ((40000*16)/(I2STXZERO*32*2)) )
-				{
-					tx_link_address = (uint32_t)(&i2sBufDescNLP);
-					nonlpcount = 0;
-				}
-
-				//XXX TODO: This code is likely wrong.  We need to hadle the interplay between NLPs and heavy traffic a lot better.
-				//WARNING Try it before and after!!!
-				if( waitcount > 4 )
-				{
-				
-					i2stxdone = 1;
-
-				}
-				else
-				{
-					i2stxdone = 0;
-					waitcount++;
-				}
+				i2stxdone = 1;
 			}
-			else
-			{
-				waitcount = 0;
-				i2sBufDescTX[1].next_link_ptr = tx_link_address;
-				tx_link_address = 0;
-			}
+			insend = 0;
 		}
-		else
+
+		//Warning: This code may be called multiple times per packet.
+		if( finishedDesc->unused == 1 && !insend )
 		{
-			i2sBufDescTX[1].next_link_ptr = (int)&i2sBufDescTX[0];
+			i2sBufDescTX[3].next_link_ptr= (int)(&i2sBufDescTX[2]);
+			if( nlpcount > NLP_EVERY )	
+			{
+				i2sBufDescTX[1].next_link_ptr= (int)(&i2sBufDescNLP);
+				insend = 1;
+				nlpcount = 0;
+			}
+
+			if( tx_link_address && !insend )
+			{
+				i2sBufDescTX[1].next_link_ptr= (int)(tx_link_address);
+				tx_link_address = 0;
+				insend = 2;
+			}
 		}
 
 		slc_intr_status &= ~SLC_RX_EOF_INT_ST;
@@ -154,7 +158,7 @@ LOCAL void slc_isr(void) {
 			k = system_get_time();
 		}
 #endif
-		GotNewData( (uint32_t*) finishedDesc->buf_ptr, I2SDMABUFLEN );
+		GotNewI2SData( (uint32_t*) finishedDesc->buf_ptr, I2SDMABUFLEN );
 #ifdef PROFILE_GOTNEWDATA
 		if( i == 1000 )
 		{
@@ -175,14 +179,14 @@ LOCAL void slc_isr(void) {
 	if( slc_intr_status & SLC_TX_DSCR_ERR_INT_ST ) //RX Fault, maybe owner was not set fast enough?
 	{
 		KickRX();
-		printf( "RXFault\n" );
+		//printf( "RXFault\n" );
 		slc_intr_status &= ~SLC_TX_DSCR_ERR_INT_ST;
 		last_unknown_int++;
 	}
 	if( slc_intr_status )
 	{
 		last_unknown_int = slc_intr_status;
-		printf( "UI:%08x\n", last_unknown_int );
+		//printf( "UI:%08x\n", last_unknown_int );
 	}
 
 }
@@ -233,23 +237,20 @@ void ICACHE_FLASH_ATTR testi2s_init() {
 		}
 	}
 
-	i2sBufDescTX[0].owner=1;
-	i2sBufDescTX[0].eof=1;
-	i2sBufDescTX[0].sub_sof=0;
-	i2sBufDescTX[0].datalen=I2STXZERO*4;
-	i2sBufDescTX[0].blocksize=I2STXZERO*4;
-	i2sBufDescTX[0].buf_ptr=(uint32_t)&i2sBDTX[0];
-	i2sBufDescTX[0].unused=0;
-	i2sBufDescTX[0].next_link_ptr= (int)(&i2sBufDescTX[1]);
+	static const uint8_t bufferpointers[] = { 1, 0, 3, 2, 2, 2 };
 
-	i2sBufDescTX[1].owner=1;
-	i2sBufDescTX[1].eof=1;
-	i2sBufDescTX[1].sub_sof=0;
-	i2sBufDescTX[1].datalen=I2STXZERO*4;
-	i2sBufDescTX[1].blocksize=I2STXZERO*4;
-	i2sBufDescTX[1].buf_ptr=(uint32_t)&i2sBDTX[0];
-	i2sBufDescTX[1].unused=1;
-	i2sBufDescTX[1].next_link_ptr= (int)(&i2sBufDescTX[0]);
+	for( x = 0; x < 6; x++ )
+	{
+		i2sBufDescTX[x].owner=1;
+		i2sBufDescTX[x].eof=1;
+		i2sBufDescTX[x].sub_sof=0;
+		i2sBufDescTX[x].datalen=I2STXZERO*4;
+		i2sBufDescTX[x].blocksize=I2STXZERO*4;
+		i2sBufDescTX[x].buf_ptr=(uint32_t)&i2sBDTX[0];
+		i2sBufDescTX[x].unused=x;
+		i2sBufDescTX[x].next_link_ptr= (int)(&i2sBufDescTX[bufferpointers[x]]);
+	}
+
 
 	for( y = 0; y < I2STXZERO; y++ )
 	{
@@ -263,9 +264,12 @@ void ICACHE_FLASH_ATTR testi2s_init() {
 	i2sBufDescNLP.blocksize=4*4;
 	i2sBufDescNLP.buf_ptr=(uint32_t)I2SNLP;
 	i2sBufDescNLP.unused=6;
-	i2sBufDescNLP.next_link_ptr= (int)(&i2sBufDescTX[0]);
+	i2sBufDescNLP.next_link_ptr= (int)(&i2sBufDescTX[2]);
 
 	i2stxdone = 1;
+	nlpcount = 0;
+	insend = 0;
+	tx_link_address = 0;
 
 
 	CLEAR_PERI_REG_MASK(SLC_CONF0, SLC_RXLINK_RST|SLC_TXLINK_RST|SLC_AHBM_RST | SLC_AHBM_FIFO_RST);
@@ -386,200 +390,34 @@ void SendI2SPacket( uint32_t * pak, uint16_t dwords )
 
 	while( !i2stxdone );
 
-	i2sBufDescTX[2].owner=1;
-	i2sBufDescTX[2].eof=1;
-	i2sBufDescTX[2].sub_sof=0;
-	i2sBufDescTX[2].datalen=firstdwords*4;
-	i2sBufDescTX[2].blocksize=16;
-	i2sBufDescTX[2].buf_ptr=(uint32_t)pak;
-	i2sBufDescTX[2].unused=2;
-	i2sBufDescTX[2].next_link_ptr= (int)(&i2sBufDescTX[0]);
+	i2sBufDescTX[4].owner=1;
+	i2sBufDescTX[4].eof=1;
+	i2sBufDescTX[4].sub_sof=0;
+	i2sBufDescTX[4].datalen=firstdwords*4;
+	i2sBufDescTX[4].blocksize=16;
+	i2sBufDescTX[4].buf_ptr=(uint32_t)pak;
+	i2sBufDescTX[4].unused=2;
+	i2sBufDescTX[4].next_link_ptr= (int)(&i2sBufDescTX[2]);
 
 	if( seconddwords )
 	{
-		i2sBufDescTX[3].owner=1;
-		i2sBufDescTX[3].eof=1;
-		i2sBufDescTX[3].sub_sof=0;
-		i2sBufDescTX[3].datalen=seconddwords*4;
-		i2sBufDescTX[3].blocksize=16;
-		i2sBufDescTX[3].buf_ptr=(uint32_t)&pak[firstdwords];
-		i2sBufDescTX[3].unused=3;
-		i2sBufDescTX[3].next_link_ptr= (int)(&i2sBufDescTX[0]);
+		i2sBufDescTX[5].owner=1;
+		i2sBufDescTX[5].eof=1;
+		i2sBufDescTX[5].sub_sof=0;
+		i2sBufDescTX[5].datalen=seconddwords*4;
+		i2sBufDescTX[5].blocksize=16;
+		i2sBufDescTX[5].buf_ptr=(uint32_t)&pak[firstdwords];
+		i2sBufDescTX[5].unused=3;
+		i2sBufDescTX[5].next_link_ptr= (int)(&i2sBufDescTX[2]);
 
-		i2sBufDescTX[2].next_link_ptr= (int)(&i2sBufDescTX[3]);
+		i2sBufDescTX[4].next_link_ptr= (int)(&i2sBufDescTX[5]);
 	}
 
 	//Link in.
-	tx_link_address = (uint32_t)&i2sBufDescTX[2];
+	tx_link_address = (uint32_t)&i2sBufDescTX[4];
 
 	//Set our "notdone" flag
 	i2stxdone = 0;
-}
-
-
-//Process a bundle from the i2s engine. 
-//
-//This is called from within the i2s interrupt. 
-static void	GotNewData( uint32_t * dat, int datlen )
-{
-	int i = 0;
-	int r;
-	static int stripe = 0;
-
-	gotdma=1;
-
-keep_going:
-
-
-	//Search for until data is ffffffff or 00000000.
-	//This would be if we think we hit the end of a packet or a bad packet.
-	//Just speed along till the bad dream is over.
-	if( PacketStoreInSitu < 0 )
-	{
-		for( ; i < datlen; i+=2 )
-		{
-			uint32_t d = dat[i];
-
-			//Look for a set of 3 non null packets.
-			if( d != 0xffffffff && d != 0x00000000 )
-			{
-				PacketStoreInSitu = 0;
-				gotlink = 1;
-				stripe = 1;
-				break;
-			}
-		}
-
-		//Still searching?  If so come back in here next time.
-		if( PacketStoreInSitu ) return;
-	}
-
-	//Otherwise we're looking for several non-zero packets in a row.
-	//This would indicate a start of a packet.
-	if( PacketStoreInSitu == 0 )
-	{
-		//Quescent state.
-		for( ; i < datlen; i+=2 )
-		{
-			uint32_t d = dat[i];
-
-			//Look for a set of 3 non null packets.
-			if( d != 0xffffffff && d != 0x00000000 )
-			{
-				gotlink = 1;
-				stripe++;
-				if( stripe == 3 )
-				{
-					PacketStoreInSitu = 1;
-					break;
-				}
-			}
-			else
-			{
-				stripe = 0;
-			}
-		}
-
-		//Nothing interesting happened all packet.  Return back to the host.
-		if( !PacketStoreInSitu )
-			return;
-
-		stripe = 0;
-		//Something happened... 
-
-		r = ResetPacketInternal(1);
-
-		//Make sure we can get a free packet.
-		if( r < 0 )
-		{
-			//Otherwise, we have to dump this on-wire packet.
-			PacketStoreInSitu = -1;
-			goto keep_going;
-		}
-
-		//Good to go and start processing data.
-
-#ifdef ALLOW_FRAME_DEBUGGING
-		if( KeepNextPacket > 0 && KeepNextPacket < 3 )
-		{
-			PacketStoreLength = 0;
-			g_process_paktime = 0;
-		}
-#endif
-		//We can safely skip a free word since preambles are so long.
-		//Do this for performance reasons.
-		i ++;
-	}
-
-#ifdef ALLOW_FRAME_DEBUGGING
-	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
-	{
-		int start;
-		if( i != 0 )
-		{
-			//Starting a packet.	
-			start = i-(4+2);
-			if( start < 0 ) start = 0;
-		}
-		else
-		{
-			//Middle of packet
-			start = i;
-		}
-
-		int k;
-		for( k = start; k < datlen && PacketStoreLength < STOPKTSIZE; k++ )
-		{
-			PacketStore[PacketStoreLength++] = dat[k];
-		}
-
-		g_process_paktime -= system_get_time();
-	}
-#endif
-
-	//Start processing a packet.
-	if( i < datlen )
-	{
-		r = DecodePacket( &dat[i], datlen - i );
-	}
-	i += r;
-
-#ifdef ALLOW_FRAME_DEBUGGING
-	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
-	{
-		g_process_paktime += system_get_time();
-	}
-#endif
-
-	//Done with this segment, next one to come.
-	if( r == 0 )
-	{
-		gotlink = 1;
-		return;
-	}
-
-	//Packet is complete, or error in packet.  No matter what, we have to finish off the packet next time.
-	PacketStoreInSitu = -1;
-
-#ifdef ALLOW_FRAME_DEBUGGING
-	if( KeepNextPacket > 0 && KeepNextPacket < 3 )
-	{
-		int trim = (datlen-i);
-		trim--;
-
-		if( trim < 0 ) trim = 0;
-		if( trim > PacketStoreLength - 10 ) trim = (PacketStoreLength-10);
-		PacketStoreLength -= trim;
-
-		//Only release if packet not waiting for clear.
-		if( KeepNextPacket == 1 ) KeepNextPacket = 4;
-
-		//Packet knowingly faulted and we were waiting for packet?
-		if( KeepNextPacket == 2 && rx_pack_flags[rx_cur] == 0 ) { KeepNextPacket = 4; }
-	}
-#endif
-
-	goto keep_going;
 }
 
 

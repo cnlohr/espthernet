@@ -35,6 +35,9 @@ void ICACHE_FLASH_ATTR testi2s_init();
 
 void ICACHE_FLASH_ATTR SendI2SPacket( uint32_t * pak, uint16_t dwords );
 
+//You, as the user must provide, this will be called from an ISR, so be careful not to take long!
+void	GotNewI2SData( uint32_t * dat, int datlen );
+
 
 //For storing packets when they come in, so they can be processed in the main loop.
 

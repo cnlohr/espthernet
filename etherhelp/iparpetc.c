@@ -708,7 +708,7 @@ uint8_t ClientArpTablePointer = 0;
 
 struct PINGEntries ClientPingEntries[PING_RESPONSES_SIZE];
 
-int8_t GetPingslot( uint8_t * ip )
+int8_t  ICACHE_FLASH_ATTR GetPingslot( uint8_t * ip )
 {
 	uint8_t i;
 	for( i = 0; i < PING_RESPONSES_SIZE; i++ )
@@ -723,7 +723,7 @@ int8_t GetPingslot( uint8_t * ip )
 	return i;
 }
 
-void DoPing( uint8_t pingslot )
+void  ICACHE_FLASH_ATTR DoPing( uint8_t pingslot )
 {
 	unsigned short ppl;	
 	uint16_t seqnum = ++ClientPingEntries[pingslot].last_send_seqnum;

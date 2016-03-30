@@ -26,12 +26,12 @@ static volatile os_timer_t some_timer;
 
 //int ICACHE_FLASH_ATTR StartMDNS();
 
-void user_rf_pre_init(void)
+void ICACHE_FLASH_ATTR user_rf_pre_init(void)
 {
 	//nothing.
 }
 
-char * strcat( char * dest, char * src )
+char ICACHE_FLASH_ATTR * strcat( char * dest, char * src )
 {
 	return strcat(dest, src );
 }

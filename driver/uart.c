@@ -34,8 +34,7 @@ LOCAL void uart0_rx_intr_handler(void *para);
  * Parameters   : uart_no, use UART0 or UART1 defined ahead
  * Returns      : NONE
 *******************************************************************************/
-LOCAL void ICACHE_FLASH_ATTR
-uart_config(uint8 uart_no)
+LOCAL void ICACHE_FLASH_ATTR uart_config(uint8 uart_no)
 {
   if (uart_no == UART1)
   {
@@ -93,8 +92,7 @@ uart_config(uint8 uart_no)
  * Parameters   : uint8 TxChar - character to tx
  * Returns      : OK
 *******************************************************************************/
-LOCAL STATUS
-uart_tx_one_char(uint8 uart, uint8 TxChar)
+LOCAL STATUS uart_tx_one_char(uint8 uart, uint8 TxChar)
 {
     while (true)
     {

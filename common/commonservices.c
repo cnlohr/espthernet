@@ -250,6 +250,7 @@ int ICACHE_FLASH_ATTR issue_command(char * buffer, int retsize, char *pusrdata, 
 		}
 	case 'f': case 'F':  //Flashing commands (F_)
 	{
+
 		flashchip->chip_size = 0x01000000;
 		const char * colon = (const char *) ets_strstr( (char*)&pusrdata[2], "\t" );
 		int nr = my_atoi( &pusrdata[2] );
@@ -290,7 +291,9 @@ int ICACHE_FLASH_ATTR issue_command(char * buffer, int retsize, char *pusrdata, 
 
 		case 'm': case 'M': //Execute the flash re-writer
 			{
+				printf( "FM: %s %d", &pusrdata[2], len-2 );
 				int r = (*GlobalRewriteFlash)( &pusrdata[2], len-2 );
+				printf( "FMRESP: %d\n", r );
 				buffend += ets_sprintf( buffend, "!FM%d\r\n", r );
 				break;
 			}
@@ -866,7 +869,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 }
 
 
-void CSTick( int slowtick )
+void ICACHE_FLASH_ATTR CSTick( int slowtick )
 {
 	static uint8_t done_first_slowtick = 0;
 	static uint8_t tick_flag = 0;

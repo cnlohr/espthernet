@@ -31,7 +31,7 @@
 #define TCP_MAX_RETRIES 50
 
 #define RXBUFS 2
-#define PTR_TO_RX_BUF( x ) ( ETBUFFERSIZE + x * MAX_FRAMELEN )
+#define PTR_TO_RX_BUF( x ) ( ETBUFFERSIZE + TCP_BUFFERS + (x * MAX_FRAMELEN) )
 #define RX_BUFFER_SIZE (RXBUFS*MAX_FRAMELEN)
 extern unsigned char ETbuffer[RX_BUFFER_END] __attribute__((aligned(32)));
 

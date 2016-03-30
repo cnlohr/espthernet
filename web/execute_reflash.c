@@ -91,7 +91,7 @@ uint32_t Push( uint32_t offset, const char * file )
 			int sel = sprintf( se, "FB%d\r\n", block );
 	
 			thissuccess = 0;
-			for( tries = 0; tries < 10; tries++ )
+			for( tries = 0; tries < 60; tries++ )
 			{
 				char match[75];
 				printf( "Erase: %d\n", block );
@@ -117,7 +117,7 @@ uint32_t Push( uint32_t offset, const char * file )
 		printf( "bufferout: %d %d\n", sendplace, sendsize );
 
 		thissuccess = 0;
-		for( tries = 0; tries < 10; tries++ )
+		for( tries = 0; tries < 60; tries++ )
 		{
 			char match[75];
 			sendto( sockfd, bufferout, sendsize + r, MSG_NOSIGNAL, (struct sockaddr *)&servaddr,sizeof(servaddr));

@@ -6,8 +6,6 @@
 #include <osapi.h>
 #include "crc32.h"
 
-void SendNLP();
-
 unsigned char ETbuffer[RX_BUFFER_END] __attribute__((aligned(32)));
 
 unsigned short ETsendplace;
@@ -19,8 +17,6 @@ uint32_t g_process_paktime;
 unsigned char MyMAC[6];
 unsigned char MyIP[4] = { 10, 1, 10, 5 };
 unsigned char MyMask[4] = { 255, 0, 0, 0 };
-
-int pendingnlp = 0;
 
 //Internal functs
 
@@ -162,11 +158,9 @@ g_process_paktime += system_get_time();
 
 #else
 
-void et_backend_tick_quick()
+void ICACHE_FLASH_ATTR et_backend_tick_quick()
 {
 	int i;
-	if( pendingnlp )
-		SendNLP();
 
 	for( i = 0; i < RXBUFS; i++ )
 	{
@@ -224,86 +218,6 @@ ICACHE_FLASH_ATTR void et_backend_tick_slow()
 	gotlink++;
 	gotdma++;
 }
-
-static volatile os_timer_t nlp_timer;
-
-#ifdef FULL_DUPLEX_FLP
-
-//Full-duplex link.  (DOES NOT WORK)
-
-//XXX TODO This functionality doesn't actually work.
-//It likely has to do with timing inaccuracies, but I don't have
-//the equipment available now to determin what's going on.
-
-uint8_t nlpxstate = 0;
-
-const uint8_t linkcodeword[] = { 
-	1, 1, //802.3
-	1, 0,
-	1, 0,
-	1, 0,
-	1, 0,
-	1, 1, //10BaseT
-	1, 1, //Full duplex
-	1, 0,
-	1, 0, 
-	1, 0, 
- 	1, 0,
-	1, 0, 
-	1, 0, 
-	1, 0, //Remote fault
-	1, 1, //Acknowledge
-	1, 0, //Next page
- };
-
-void SendNLPX()
-{
-	uint8_t sendpulse = 0;
-	static uint32_t nlpsend[5] = { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x0000000f };
-	if( !i2stxdone ) { nlpxstate = 128; } //well after any more link pulses.
-
-	if( nlpxstate < sizeof( linkcodeword ) )
-		if( linkcodeword[nlpxstate] )
-			SendI2SPacket( nlpsend, sizeof( nlpsend ) / 4 );
-	
-	nlpxstate++;
-}
-
-ICACHE_FLASH_ATTR void ConfigNLP()
-{
-	os_timer_disarm(&nlp_timer);
-	os_timer_setfn(&nlp_timer, (os_timer_func_t *)SendNLPX, NULL);
-	os_timer_arm_us(&nlp_timer, 62, 1);
-}
-
-#else
-/*
-//Send out an NLP pulse. This NLP unfortunately identifies us at 10-base-T, half-duplex.
-ICACHE_FLASH_ATTR void SendNLP()
-{
-	static uint32_t nlpsend[5] = { 0x00000000, 0x00000000, 0x0000001f, 0x00000000 };
-	if( i2stxdone )
-	{
-		SendI2SPacket( nlpsend, sizeof( nlpsend ) / 4 );
-		pendingnlp = 0;
-	}
-	else
-	{
-		pendingnlp = 1;
-	}
-}
-
-ICACHE_FLASH_ATTR void ConfigNLP()
-{
-	os_timer_disarm(&nlp_timer);
-	os_timer_setfn(&nlp_timer, (os_timer_func_t *)SendNLP, NULL);
-	os_timer_arm(&nlp_timer, 16, 1);
-}*/
-ICACHE_FLASH_ATTR void ConfigNLP()
-{}
-
-#endif
-
 
 
 //
@@ -374,8 +288,6 @@ int8_t et_init( const unsigned char * macaddy )
 
 	testi2s_init();
 
-	ConfigNLP();
-
 	return 0;
 }
 
@@ -414,7 +326,7 @@ unsigned short et_recvpack()
 	return 0;
 }
 
-void et_start_checksum( uint16_t start, uint16_t len )
+void ICACHE_FLASH_ATTR et_start_checksum( uint16_t start, uint16_t len )
 {
 	uint16_t i;
 	const uint16_t * wptr = (uint16_t*)&ETbuffer[start+sendbaseaddress];
@@ -436,7 +348,7 @@ void et_start_checksum( uint16_t start, uint16_t len )
 
 
 
-void et_copy_memory( uint16_t to, uint16_t from, uint16_t length, uint16_t range_start, uint16_t range_end )
+void ICACHE_FLASH_ATTR et_copy_memory( uint16_t to, uint16_t from, uint16_t length, uint16_t range_start, uint16_t range_end )
 {
 	uint16_t i;
 	if( to == from )

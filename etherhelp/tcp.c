@@ -367,7 +367,7 @@ void ICACHE_FLASH_ATTR TickTCP()
 
 		if( t->time_since_sent > TCP_TICKS_BEFORE_RESEND )
 		{
-			printf( "RESEND\n" );
+			//printf( "RESEND\n" );
 			if( t->state == CLOSING_WAIT )
 			{
 				MARK( "__Closeout %d\n", i );

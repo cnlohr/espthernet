@@ -66,6 +66,7 @@ void ICACHE_FLASH_ATTR Uint32To10Str( char * out, uint32 dat )
 	out[place] = 0;
 }
 
+//Don't put these as flash as they can be critical.
 char tohex1( uint8_t i )
 {
 	i = i&0x0f;
@@ -102,7 +103,7 @@ struct _esp_tcp interop_tcps[TCP_SOCKETS];
 //Comes from underlying stack.
 void  ICACHE_FLASH_ATTR  et_TCPConnectionClosing( uint8_t i )
 {
-	printf( "CLOSE CALLBACK\n" );
+	//printf( "CLOSE CALLBACK\n" );
 	if( interop_conns[i].proto.tcp->disconnect_callback )
 	{
 		 interop_conns[i].proto.tcp->disconnect_callback( &interop_conns[i] );
@@ -113,7 +114,7 @@ void  ICACHE_FLASH_ATTR  et_TCPConnectionClosing( uint8_t i )
 //called by user
 void ICACHE_FLASH_ATTR et_espconn_disconnect( struct espconn * pespconn )
 {
-	printf( "FORCE CLOSE\n" );
+//	printf( "FORCE CLOSE\n" );
 	if( pespconn->link_cnt > 200 )
 	{
 		et_RequestClosure( pespconn->link_cnt-200 );
@@ -146,7 +147,7 @@ uint8_t ICACHE_FLASH_ATTR et_TCPReceiveSyn( uint16_t portno )
 		//TODO: Other setup to make our tcp conn look like an ESP tcp conn.
 
 		httpserver_connectcb( rc );
-		printf( "Connect on %d/%d\n", portno, ret );
+		//printf( "Connect on %d/%d\n", portno, ret );
 	}
 
 	return ret;
