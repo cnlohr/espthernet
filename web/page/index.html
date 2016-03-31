@@ -40,6 +40,7 @@ td { vertical-align: top; }
 
 <tr><td width=1>
 <input type=submit onclick="ShowHideEvent( 'LastPacket' ); KickLastPacket();" value="Last Packet" STYLE=""></td><td>
+<FONT SIZE=-2 COLOR=blue>&lt&lt&lt Click here</FONT>
 <div id=LastPacket class="collapsible">
 
 <TABLE WIDTH=10%>
@@ -49,7 +50,7 @@ td { vertical-align: top; }
 <TD NOWRAP><INPUT type=checkbox id="errpak">Wait for error.</TD>
 <TD><INPUT type=text id=pakdat alt="Tab deliminated format 0xabcdef00"></TD>
 <TD><INPUT type=submit onclick="RunOnScreenData();" value="Run on Data"></TD>
-<TD><INPUT type=submit onclick="LoadTestPack();" value="Load Test Pack"></TD>
+<TD><INPUT type=submit onclick="LoadTestPack();" value="Load Test Pack"><DIV><FONT SIZE=-2 COLOR=blue>Try loading the test packet.</FONT></DIV></TD>
 <TD WIDTH=100%> </TD>
 </TR>
 </TABLE>
@@ -59,6 +60,9 @@ td { vertical-align: top; }
 <div id="LastPacketBody" style="display:inline-block;width:600px;white-space:normal;">
 </div>
 </div>
+
+<FONT SIZE=-2 COLOR=blue>You can try seeing what happens with different bit patters by clicking the "1" or "0" in raw bits.</FONT>
+
 <BR>
 <INPUT type=checkbox id="RunSim" onclick="UpdateValids();">Simulation of table-based implementation<BR>
 <div id="SimArea" style="overflow-x:scroll;white-space:nowrap;">

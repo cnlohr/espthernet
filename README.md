@@ -1,6 +1,6 @@
 #espthernet
 
-*It's pronounced "e-s-peethernet"* - *This is not a party trick, not a legitimate engineering solution.*
+*It's pronounced "e-s-peethernet" - a party trick, not a legitimate engineering solution.*
 
 ESP8266 I2S + Software-based 10-Base-T Ethernet Driver.  
 
@@ -26,4 +26,4 @@ The system
  * Switch to half-duplex option, or separate streams.  By using 20 MHz TX, and 32-36 MHz RX, you can save a lot of time since you'd have to process less data, and remove the requirement for signal bias. 
  * Add Hook to internal IP stack of whatever is being used.
  * Use FLPs instead of NLPs to negotiate for 10BaseT-FD instead of -HD  (Stack handles full duplex comms, no reason not to comm at it)
-
+ * Use a pseudo-PLL for decoding packets rather than a transition finder.  It may be better?
