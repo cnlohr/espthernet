@@ -1,0 +1,772 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:special
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:atmega1284rfr2
+LIBS:lsm303d
+LIBS:stm32f303_32
+LIBS:photomos
+LIBS:BELFuse_Ethernet
+LIBS:opto2-ltv-826s
+LIBS:crystal-4p
+LIBS:xfrmr2x2
+LIBS:mosfet-lfpak56
+LIBS:mcp1824_ct
+LIBS:um5k1ntr
+LIBS:lsm303c
+LIBS:network0606
+LIBS:exb-a
+LIBS:4427
+LIBS:nor-nc7sz02p5x
+LIBS:max31855
+LIBS:a4447sljtr
+LIBS:npn-2222
+LIBS:25q40b
+LIBS:ltc2471cms
+LIBS:attinyx5
+LIBS:bmp280
+LIBS:zener-sot23-3
+LIBS:flipflop-sn74lvc1g175
+LIBS:atmel_kk
+LIBS:stm32f303
+LIBS:mfrc522
+LIBS:l6470
+LIBS:5050RGB
+LIBS:mpl3115a2
+LIBS:lis3mdl
+LIBS:avr_usb_3v3-cache
+LIBS:2.4GHZ_2450FB15L0001
+LIBS:microsd_1050270001
+LIBS:7805
+LIBS:mcp23008-qfn
+LIBS:7805to220
+LIBS:attinyx4
+LIBS:pl140c
+LIBS:esp12e
+LIBS:lsm303dlhc
+LIBS:ltv-846s
+LIBS:rs485-isl3170
+LIBS:attiny441
+LIBS:lvt-816s
+LIBS:lm386
+LIBS:neon14
+LIBS:tcs3x7x
+LIBS:jfet-n_sot-23
+LIBS:bridge-MB2S-TP
+LIBS:stm32f207
+LIBS:atmega48_88_168_328_tqfp32
+LIBS:halleffect-tcs20dlr
+LIBS:ak5358b
+LIBS:ir2101
+LIBS:lsm9ds0
+LIBS:bmp085
+LIBS:atmegax8pb
+LIBS:LSM9DS1
+LIBS:6multi
+LIBS:rn-cay16-f4
+LIBS:1206network
+LIBS:mosdriver_ncp5901bmntbg
+LIBS:esp8266ex
+LIBS:mcp23008-soic
+LIBS:mos_p_d2
+LIBS:dmp2240udm
+LIBS:pcb_bom
+LIBS:avr6pin
+LIBS:ov2640_ribbon
+LIBS:pfetsot223
+LIBS:esp8266-wi07-6
+LIBS:l6470-powerso36
+LIBS:enc424j600
+LIBS:attiny441-qfn
+LIBS:opa832
+LIBS:tvs-bidirection
+LIBS:bluetoothedpa
+LIBS:ap1117
+LIBS:adc-ltc2450
+LIBS:mag3110
+LIBS:ds2438z
+LIBS:opamp_mcp6001t
+LIBS:mmpq2907a
+LIBS:atmegaxu2
+LIBS:stm32f301
+LIBS:mosfetx2vdfn8
+LIBS:ws2812b
+LIBS:resonator6smd
+LIBS:ws_switch
+LIBS:stm32f407_100
+LIBS:lan8720a
+LIBS:isol_adum1201brz
+LIBS:can_sn65hvd251qdrq1
+LIBS:pwrcnv_nxe1s0305mc-r7
+LIBS:ft600q
+LIBS:memi2c_m24m02-dr
+LIBS:sp3010-04utg
+LIBS:tvs2-wurth-82400102
+LIBS:usb3-gsb443133hr
+LIBS:protect_ncp360snt1g
+LIBS:mcp1803
+LIBS:ad9216
+LIBS:mcp1804
+LIBS:cyusb3012
+LIBS:isl3177
+LIBS:esp12e-ethernet-cache
+EELAYER 27 0
+EELAYER END
+$Descr USLetter 11000 8500
+encoding utf-8
+Sheet 1 1
+Title "ESP8266 10-Base-T Ethernet with Magnetics and Driver"
+Date "31 mar 2016"
+Rev "-"
+Comp "(C) 2016 <>< Charles Lohr"
+Comment1 "CC 3.0 BY"
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L ESP12E ESP1
+U 1 1 5619493D
+P 2000 2400
+F 0 "ESP1" H 2300 3000 60  0000 C CNN
+F 1 "ESP12E" H 1700 3000 60  0000 C CNN
+F 2 "ESP12E" H 2000 2850 60  0000 C CNN
+F 3 "~" H 2050 2150 60  0000 C CNN
+	1    2000 2400
+	1    0    0    -1  
+$EndComp
+$Comp
+L AP1117 U1
+U 1 1 5619494C
+P 3250 1350
+F 0 "U1" H 3250 1550 60  0000 C CNN
+F 1 "AP1117-3.3V" H 3250 1150 60  0000 C CNN
+F 2 "SOT223" H 2800 1200 60  0000 C CNN
+F 3 "" H 3250 1350 60  0000 C CNN
+	1    3250 1350
+	-1   0    0    1   
+$EndComp
+$Comp
+L +3.3V #PWR01
+U 1 1 5619496A
+P 1100 2650
+F 0 "#PWR01" H 1100 2610 30  0001 C CNN
+F 1 "+3.3V" H 1100 2760 30  0000 C CNN
+F 2 "" H 1100 2650 60  0000 C CNN
+F 3 "" H 1100 2650 60  0000 C CNN
+	1    1100 2650
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR02
+U 1 1 56194979
+P 2600 1350
+F 0 "#PWR02" H 2600 1310 30  0001 C CNN
+F 1 "+3.3V" H 2600 1460 30  0000 C CNN
+F 2 "" H 2600 1350 60  0000 C CNN
+F 3 "" H 2600 1350 60  0000 C CNN
+	1    2600 1350
+	1    0    0    -1  
+$EndComp
+$Comp
+L +5V #PWR03
+U 1 1 56194988
+P 2550 1450
+F 0 "#PWR03" H 2550 1540 20  0001 C CNN
+F 1 "+5V" H 2550 1540 30  0000 C CNN
+F 2 "" H 2550 1450 60  0000 C CNN
+F 3 "" H 2550 1450 60  0000 C CNN
+	1    2550 1450
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR04
+U 1 1 56194997
+P 2500 1250
+F 0 "#PWR04" H 2500 1250 30  0001 C CNN
+F 1 "GND" H 2500 1180 30  0001 C CNN
+F 2 "" H 2500 1250 60  0000 C CNN
+F 3 "" H 2500 1250 60  0000 C CNN
+	1    2500 1250
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR05
+U 1 1 561949B4
+P 2900 2700
+F 0 "#PWR05" H 2900 2700 30  0001 C CNN
+F 1 "GND" H 2900 2630 30  0001 C CNN
+F 2 "" H 2900 2700 60  0000 C CNN
+F 3 "" H 2900 2700 60  0000 C CNN
+	1    2900 2700
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR06
+U 1 1 561949C1
+P 1100 2150
+F 0 "#PWR06" H 1100 2110 30  0001 C CNN
+F 1 "+3.3V" H 1100 2260 30  0000 C CNN
+F 2 "" H 1100 2150 60  0000 C CNN
+F 3 "" H 1100 2150 60  0000 C CNN
+	1    1100 2150
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR07
+U 1 1 561949D6
+P 1100 1950
+F 0 "#PWR07" H 1100 1910 30  0001 C CNN
+F 1 "+3.3V" H 1100 2060 30  0000 C CNN
+F 2 "" H 1100 1950 60  0000 C CNN
+F 3 "" H 1100 1950 60  0000 C CNN
+	1    1100 1950
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR08
+U 1 1 56194B99
+P 3900 2750
+F 0 "#PWR08" H 3900 2750 30  0001 C CNN
+F 1 "GND" H 3900 2680 30  0001 C CNN
+F 2 "" H 3900 2750 60  0000 C CNN
+F 3 "" H 3900 2750 60  0000 C CNN
+	1    3900 2750
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_8 P1
+U 1 1 56194CDB
+P 4300 2300
+F 0 "P1" H 4300 2600 60  0000 C CNN
+F 1 "EXTHDR" V 4300 2250 60  0000 C CNN
+F 2 "SIL-8" H 4300 1850 60  0000 C CNN
+F 3 "" H 4300 2300 60  0000 C CNN
+	1    4300 2300
+	1    0    0    -1  
+$EndComp
+$Comp
+L EXB-A RN1
+U 1 1 56194CEA
+P 3550 3000
+F 0 "RN1" H 3700 3300 60  0000 C CNN
+F 1 "EXB-A (10k)" V 3250 2450 60  0000 C CNN
+F 2 "EXB-A" V 3350 2600 60  0000 C CNN
+F 3 "" H 3550 3000 60  0000 C CNN
+	1    3550 3000
+	0    -1   -1   0   
+$EndComp
+$Comp
+L C C1
+U 1 1 56194F36
+P 5150 1300
+F 0 "C1" H 5150 1400 40  0000 L CNN
+F 1 "10u" H 5156 1215 40  0000 L CNN
+F 2 "SM0805" H 5188 1150 30  0000 C CNN
+F 3 "~" H 5150 1300 60  0000 C CNN
+	1    5150 1300
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C2
+U 1 1 56194F45
+P 5400 1300
+F 0 "C2" H 5400 1400 40  0000 L CNN
+F 1 "10u" H 5406 1215 40  0000 L CNN
+F 2 "SM0805" H 5438 1150 30  0000 C CNN
+F 3 "~" H 5400 1300 60  0000 C CNN
+	1    5400 1300
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR09
+U 1 1 56194F76
+P 5400 1050
+F 0 "#PWR09" H 5400 1010 30  0001 C CNN
+F 1 "+3.3V" H 5400 1160 30  0000 C CNN
+F 2 "" H 5400 1050 60  0000 C CNN
+F 3 "" H 5400 1050 60  0000 C CNN
+	1    5400 1050
+	1    0    0    -1  
+$EndComp
+$Comp
+L +5V #PWR010
+U 1 1 56194F7C
+P 5150 1050
+F 0 "#PWR010" H 5150 1140 20  0001 C CNN
+F 1 "+5V" H 5150 1140 30  0000 C CNN
+F 2 "" H 5150 1050 60  0000 C CNN
+F 3 "" H 5150 1050 60  0000 C CNN
+	1    5150 1050
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR011
+U 1 1 56194FE5
+P 5150 1600
+F 0 "#PWR011" H 5150 1600 30  0001 C CNN
+F 1 "GND" H 5150 1530 30  0001 C CNN
+F 2 "" H 5150 1600 60  0000 C CNN
+F 3 "" H 5150 1600 60  0000 C CNN
+	1    5150 1600
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR012
+U 1 1 5619501E
+P 5400 1600
+F 0 "#PWR012" H 5400 1600 30  0001 C CNN
+F 1 "GND" H 5400 1530 30  0001 C CNN
+F 2 "" H 5400 1600 60  0000 C CNN
+F 3 "" H 5400 1600 60  0000 C CNN
+	1    5400 1600
+	1    0    0    -1  
+$EndComp
+Text GLabel 3100 2450 3    60   Input ~ 0
+GPIO2
+Text GLabel 3000 2350 3    60   Input ~ 0
+GPIO0
+Text GLabel 3200 2250 3    60   Input ~ 0
+GPIO4
+Text GLabel 3100 2150 3    60   Input ~ 0
+GPIO5
+Text GLabel 2950 2050 3    60   Input ~ 0
+RX
+Text GLabel 3250 1950 3    60   Input ~ 0
+TX
+$Comp
+L CONN_10 P2
+U 1 1 56CD1A50
+P 10100 2350
+F 0 "P2" V 10050 2350 60  0000 C CNN
+F 1 "ETHERNET" V 10150 2350 60  0000 C CNN
+F 2 "SMT_ETHERNET" H 10100 2900 60  0000 C CNN
+F 3 "" H 10100 2350 60  0000 C CNN
+	1    10100 2350
+	1    0    0    -1  
+$EndComp
+$Comp
+L S553-5999-52 T1
+U 1 1 56CD3037
+P 9000 2250
+F 0 "T1" H 8850 2950 70  0000 C CNN
+F 1 "S553-5999-52" H 9000 1500 70  0000 C CNN
+F 2 "BELFuse-S553" H 9000 1400 60  0000 C CNN
+F 3 "" H 9000 2250 60  0000 C CNN
+	1    9000 2250
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	2500 1250 2700 1250
+Wire Wire Line
+	2600 1350 2700 1350
+Wire Wire Line
+	2550 1450 2700 1450
+Wire Wire Line
+	3800 1350 4500 1350
+Wire Wire Line
+	1100 2650 1200 2650
+Wire Wire Line
+	2900 2550 2900 2700
+Wire Wire Line
+	2900 2650 2800 2650
+Wire Wire Line
+	1100 2150 1200 2150
+Wire Wire Line
+	1100 1950 1200 1950
+Wire Wire Line
+	2800 2550 2900 2550
+Connection ~ 2900 2650
+Wire Wire Line
+	2800 2450 3950 2450
+Wire Wire Line
+	2800 2350 3950 2350
+Wire Wire Line
+	2800 2150 3950 2150
+Wire Wire Line
+	2800 2250 3950 2250
+Wire Wire Line
+	2800 1950 3950 1950
+Wire Wire Line
+	2800 2050 3950 2050
+Wire Wire Line
+	3750 3500 4500 3500
+Wire Wire Line
+	3750 3500 3750 3450
+Wire Wire Line
+	2600 1450 2600 1750
+Wire Wire Line
+	2600 1750 4650 1750
+Connection ~ 2600 1450
+Wire Wire Line
+	3900 2750 3900 2550
+Wire Wire Line
+	3450 2150 3450 2550
+Wire Wire Line
+	3550 2250 3550 2550
+Wire Wire Line
+	3650 2350 3650 2550
+Wire Wire Line
+	3750 2450 3750 2550
+Connection ~ 3750 2450
+Connection ~ 3650 2350
+Connection ~ 3550 2250
+Connection ~ 3450 2150
+Wire Wire Line
+	3350 3450 3400 3450
+Wire Wire Line
+	3400 3450 3400 2500
+Wire Wire Line
+	3400 2500 3450 2500
+Connection ~ 3450 2500
+Wire Wire Line
+	3550 2500 3500 2500
+Wire Wire Line
+	3500 2500 3500 3450
+Wire Wire Line
+	3500 3450 3450 3450
+Connection ~ 3550 2500
+Wire Wire Line
+	3650 2500 3600 2500
+Wire Wire Line
+	3600 2500 3600 3450
+Wire Wire Line
+	3600 3450 3550 3450
+Connection ~ 3650 2500
+Wire Wire Line
+	3750 2500 3700 2500
+Wire Wire Line
+	3700 2500 3700 3450
+Wire Wire Line
+	3700 3450 3650 3450
+Connection ~ 3750 2500
+Wire Wire Line
+	5150 1050 5150 1100
+Wire Wire Line
+	5400 1050 5400 1100
+Wire Wire Line
+	5150 1600 5150 1500
+Wire Wire Line
+	5400 1600 5400 1500
+Wire Wire Line
+	3900 2550 3950 2550
+Wire Wire Line
+	4500 3500 4500 1350
+Wire Wire Line
+	4650 1750 4650 2700
+Wire Wire Line
+	4650 2700 3950 2700
+Wire Wire Line
+	3950 2700 3950 2650
+Wire Wire Line
+	1400 3650 5250 3650
+Wire Wire Line
+	850  2450 1200 2450
+Wire Wire Line
+	9400 1700 9650 1700
+Wire Wire Line
+	9650 1700 9650 1900
+Wire Wire Line
+	9650 1900 9750 1900
+Wire Wire Line
+	9400 2100 9450 2100
+Wire Wire Line
+	9450 2100 9450 2000
+Wire Wire Line
+	9200 2000 9750 2000
+Wire Wire Line
+	9750 2100 9500 2100
+Wire Wire Line
+	9500 2100 9500 2450
+Wire Wire Line
+	9500 2450 9400 2450
+Wire Wire Line
+	9400 2850 9550 2850
+Wire Wire Line
+	9550 2850 9550 2400
+Wire Wire Line
+	9550 2400 9750 2400
+Wire Wire Line
+	7450 1700 8600 1700
+Wire Wire Line
+	8350 2850 8600 2850
+Wire Wire Line
+	8350 2100 8600 2100
+Wire Wire Line
+	3850 2050 3850 1850
+Wire Wire Line
+	3850 1850 5100 1850
+Connection ~ 3850 2050
+$Comp
+L C C6
+U 1 1 56CD3D32
+P 9000 1800
+F 0 "C6" H 9000 1900 40  0000 L CNN
+F 1 "NP" H 9006 1715 40  0000 L CNN
+F 2 "SM0805" H 9038 1650 30  0000 C CNN
+F 3 "~" H 9000 1800 60  0000 C CNN
+	1    9000 1800
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9200 1800 9650 1800
+Connection ~ 9650 1800
+Wire Wire Line
+	8800 1800 8100 1800
+$Comp
+L C C7
+U 1 1 56CD3E1E
+P 9000 2000
+F 0 "C7" H 9000 2100 40  0000 L CNN
+F 1 "NP" H 9006 1915 40  0000 L CNN
+F 2 "SM0805" H 9038 1850 30  0000 C CNN
+F 3 "~" H 9000 2000 60  0000 C CNN
+	1    9000 2000
+	0    1    1    0   
+$EndComp
+Connection ~ 9450 2000
+$Comp
+L C C8
+U 1 1 56CD3F79
+P 9000 2550
+F 0 "C8" H 9000 2650 40  0000 L CNN
+F 1 "NP" H 9006 2465 40  0000 L CNN
+F 2 "SM0805" H 9038 2400 30  0000 C CNN
+F 3 "~" H 9000 2550 60  0000 C CNN
+	1    9000 2550
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9200 2550 9450 2550
+Wire Wire Line
+	9450 2550 9450 2450
+Connection ~ 9450 2450
+Wire Wire Line
+	8800 2550 8500 2550
+Wire Wire Line
+	8500 2550 8500 2450
+Connection ~ 8500 2450
+$Comp
+L C C9
+U 1 1 56CD406A
+P 9000 2750
+F 0 "C9" H 9000 2850 40  0000 L CNN
+F 1 "NP" H 9006 2665 40  0000 L CNN
+F 2 "SM0805" H 9038 2600 30  0000 C CNN
+F 3 "~" H 9000 2750 60  0000 C CNN
+	1    9000 2750
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9200 2750 9550 2750
+Connection ~ 9550 2750
+Wire Wire Line
+	8800 2750 8350 2750
+Text Notes 7550 1150 0    60   ~ 0
+Use 0 ohm resistors if no magnetics are available.\nWARNING: It is dangerous to use ethernet without magnetics\nbe absolutely certain the other device is isolated.\nWARNING: Ethernet without magnetics will not work as well\nand may not work at all in some situations.
+$Comp
+L C C3
+U 1 1 56DC8FEC
+P 1200 3300
+F 0 "C3" H 1200 3400 40  0000 L CNN
+F 1 "100p" H 1206 3215 40  0000 L CNN
+F 2 "SM0805" H 1238 3150 30  0000 C CNN
+F 3 "~" H 1200 3300 60  0000 C CNN
+	1    1200 3300
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	1400 3300 2850 3300
+Wire Wire Line
+	2850 3300 2850 2650
+Connection ~ 2850 2650
+$Comp
+L R R1
+U 1 1 56DC908A
+P 1150 3650
+F 0 "R1" V 1230 3650 40  0000 C CNN
+F 1 "100" V 1157 3651 40  0000 C CNN
+F 2 "SM0805" V 1080 3650 30  0000 C CNN
+F 3 "~" H 1150 3650 30  0000 C CNN
+	1    1150 3650
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	900  3650 850  3650
+Wire Wire Line
+	850  3650 850  2450
+Wire Wire Line
+	850  3300 1000 3300
+Connection ~ 850  3300
+$Comp
+L ISL3177 U3
+U 1 1 56DC951B
+P 5950 2750
+F 0 "U3" H 5950 3050 60  0000 C CNN
+F 1 "ISL3177" H 5950 2450 60  0000 C CNN
+F 2 "SO8E" H 6100 2750 60  0000 C CNN
+F 3 "~" H 6100 2750 60  0000 C CNN
+	1    5950 2750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4500 2850 5000 2850
+Wire Wire Line
+	5000 2850 5000 2600
+Wire Wire Line
+	5000 2600 5450 2600
+Connection ~ 4500 2850
+Wire Wire Line
+	5100 1850 5100 2800
+Wire Wire Line
+	5100 2800 5450 2800
+Wire Wire Line
+	5250 3650 5250 2700
+Wire Wire Line
+	5250 2700 5450 2700
+$Comp
+L GND #PWR013
+U 1 1 56DC974E
+P 5350 3050
+F 0 "#PWR013" H 5350 3050 30  0001 C CNN
+F 1 "GND" H 5350 2980 30  0001 C CNN
+F 2 "" H 5350 3050 60  0000 C CNN
+F 3 "" H 5350 3050 60  0000 C CNN
+	1    5350 3050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5350 3050 5350 2900
+Wire Wire Line
+	5350 2900 5450 2900
+Wire Wire Line
+	6850 1700 6850 2900
+Wire Wire Line
+	6850 2900 6450 2900
+Wire Wire Line
+	6450 2800 7050 2800
+$Comp
+L R R2
+U 1 1 56DC9C54
+P 7750 2000
+F 0 "R2" V 7830 2000 40  0000 C CNN
+F 1 "100" V 7757 2001 40  0000 C CNN
+F 2 "SM0805" V 7680 2000 30  0000 C CNN
+F 3 "~" H 7750 2000 30  0000 C CNN
+	1    7750 2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C4
+U 1 1 56DC9C61
+P 7250 1700
+F 0 "C4" H 7250 1800 40  0000 L CNN
+F 1 "100p" H 7256 1615 40  0000 L CNN
+F 2 "SM0805" H 7288 1550 30  0000 C CNN
+F 3 "~" H 7250 1700 60  0000 C CNN
+	1    7250 1700
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	8100 1800 8100 1700
+Connection ~ 8100 1700
+Wire Wire Line
+	7750 1750 7750 1700
+Connection ~ 7750 1700
+Wire Wire Line
+	7050 2800 7050 2300
+Wire Wire Line
+	7050 2300 8350 2300
+Connection ~ 8350 2100
+Wire Wire Line
+	8800 2000 8350 2000
+Wire Wire Line
+	8350 2000 8350 2300
+Wire Wire Line
+	7750 2250 7750 2300
+Connection ~ 7750 2300
+Wire Wire Line
+	6850 1700 7050 1700
+$Comp
+L R R3
+U 1 1 56DCA065
+P 8000 2750
+F 0 "R3" V 8080 2750 40  0000 C CNN
+F 1 "100" V 8007 2751 40  0000 C CNN
+F 2 "SM0805" V 7930 2750 30  0000 C CNN
+F 3 "~" H 8000 2750 30  0000 C CNN
+	1    8000 2750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8000 2450 8000 2500
+Wire Wire Line
+	6450 2600 7500 2600
+Connection ~ 8000 2450
+Wire Wire Line
+	7500 2600 7500 3050
+Wire Wire Line
+	8350 2750 8350 3050
+Connection ~ 8350 2850
+Wire Wire Line
+	8350 3050 7500 3050
+Wire Wire Line
+	8000 3000 8000 3050
+Connection ~ 8000 3050
+Wire Wire Line
+	6450 2700 7350 2700
+Wire Wire Line
+	7350 2700 7350 2450
+Wire Wire Line
+	7350 2450 8600 2450
+$Comp
+L R R4
+U 1 1 56FB399D
+P 1150 3100
+F 0 "R4" V 1230 3100 40  0000 C CNN
+F 1 "270" V 1157 3101 40  0000 C CNN
+F 2 "SM0805" V 1080 3100 30  0000 C CNN
+F 3 "~" H 1150 3100 30  0000 C CNN
+	1    1150 3100
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	900  3100 850  3100
+Connection ~ 850  3100
+Wire Wire Line
+	1400 3100 1550 3100
+Wire Wire Line
+	1550 3100 1550 3300
+Connection ~ 1550 3300
+Text Notes 1850 3950 0    60   ~ 0
+NOTICE: Capacitor and resistor values were guessed.  Other values are likely much better!
+Text Notes 7050 3350 0    60   ~ 0
+NOTE: Must use 10 Megabit magnetics.  It will help prevent high\nfreuqency noise from coming in.
+$EndSCHEMATC
