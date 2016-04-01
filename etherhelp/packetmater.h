@@ -56,16 +56,6 @@ struct EthernetPacket
 	uint8_t payload[0];  //Header takes up 
 };
 
-
-//Fix all checksums for UDP packets and add etherlink CRC.
-//
-//plen is the "minimum" packet length.  if udplenoverride exceeds this, it will accomidate.
-uint16_t Ethernetize( unsigned char * packet, int plen, int udplenoverride );
-
-//From: http://www.hackersdelight.org/hdcodetxt/crc.c.txt
-uint32_t crc32b(uint32_t crc, unsigned char *message, int len);
-
-
 uint16_t internet_checksum( const unsigned char * start, uint16_t len );
 
 #endif

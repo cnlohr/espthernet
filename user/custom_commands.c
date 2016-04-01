@@ -4,6 +4,11 @@
 #include <mystuff.h>
 #include <i2sduplex.h>
 
+//These are commands that come in through UDP port 7878 or via the websocket.
+//The rest of the commands lie in common/commonservices.c.
+//
+//This file was programmed for use with espthernet.
+
 extern uint32_t g_process_paktime;
 
 void ICACHE_FLASH_ATTR ReinitSettings()
