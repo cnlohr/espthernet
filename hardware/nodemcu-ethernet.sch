@@ -36,7 +36,7 @@ $Descr User 5315 4724
 encoding utf-8
 Sheet 1 1
 Title "NodeMCU 10-Base-T Wiring Diagram"
-Date "30 mar 2016"
+Date "1 apr 2016"
 Rev "-"
 Comp "(C) 2016 <>< Charles Lohr"
 Comment1 "CC 3.0 BY"
@@ -210,4 +210,8 @@ Wire Wire Line
 Connection ~ 1900 1350
 Text Notes 500  1650 0    60   ~ 0
 An antenna may be used instead\nof C3.  This is used to radiate\nhigher freuqencies to get a\ncleaner signal at 20 MHz.
+Wire Wire Line
+	2400 1500 2400 750 
+Wire Wire Line
+	2400 750  2200 750 
 $EndSCHEMATC

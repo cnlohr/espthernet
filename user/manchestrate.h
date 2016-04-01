@@ -1,3 +1,5 @@
+//Copyright 2015-2016 <>< Charles Lohr, see LICENSE file.  This file is licensed under the 2-Clause BSD License.
+
 #ifndef _MANCHESTRATE_H
 #define _MANCHESTRATE_H
 

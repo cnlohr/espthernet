@@ -1,4 +1,5 @@
-//Copyright 2016 <>< Charles Lohr, see LICENSE file.
+//Copyright 2015-2016 <>< Charles Lohr, see LICENSE file.  This file is licensed under the 2-Clause BSD License.
+
 
 #include "mem.h"
 #include "c_types.h"

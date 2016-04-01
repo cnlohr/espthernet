@@ -1,5 +1,5 @@
-update=Sun 06 Mar 2016 03:22:28 PM EST
-last_client=eeschema
+update=Thu 31 Mar 2016 06:20:41 PM EDT
+last_client=kicad
 [eeschema]
 version=1
 LibDir=
@@ -146,3 +146,5 @@ LibName134=/home/cnlohr/electrical/kicad/ad9216
 LibName135=/home/cnlohr/electrical/kicad/mcp1804
 LibName136=/home/cnlohr/electrical/kicad/cyusb3012
 LibName137=/home/cnlohr/electrical/kicad/isl3177
+[general]
+version=1

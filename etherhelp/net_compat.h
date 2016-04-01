@@ -1,3 +1,5 @@
+//Copyright 2014-2016 <>< Charles Lohr, see LICENSE file.  This file may be licensed under the 2-Clause BSD License or the MIT/x11 Licenses.
+
 #ifndef _ENC424JCOMPAT_H
 #define _ENC424JCOMPAT_H
 
@@ -96,7 +98,6 @@ uint16_t et_read_ctrl_reg16( uint8_t addy );
 /*
      Modification of "avrcraft" IP Stack.
     Copyright (C) 2014 <>< Charles Lohr
-		CRC Code from: http://www.hackersdelight.org/hdcodetxt/crc.c.txt
 
     Permission is hereby granted, free of charge, to any person obtaining a
 	copy of this software and associated documentation files (the "Software"),

@@ -1,4 +1,4 @@
-//Copyright 2012 Charles Lohr under the MIT/x11, newBSD, LGPL or GPL licenses.  You choose.
+//Copyright 2012-2016 Charles Lohr under the MIT/x11, newBSD, LGPL or GPL licenses.  You choose.  It was originally licensed under the MIT/x11 License.  See notice at bottom.
 
 #include <mystuff.h>
 #include "iparpetc.h"
@@ -761,7 +761,6 @@ void  ICACHE_FLASH_ATTR DoPing( uint8_t pingslot )
 /*
      Modification of "avrcraft" IP Stack.
     Copyright (C) 2014 <>< Charles Lohr
-		CRC Code from: http://www.hackersdelight.org/hdcodetxt/crc.c.txt
 
     Permission is hereby granted, free of charge, to any person obtaining a
 	copy of this software and associated documentation files (the "Software"),

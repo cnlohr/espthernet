@@ -1,3 +1,7 @@
+//Copyright 2014-2016 <>< Charles Lohr, see LICENSE file.  This file may be licensed under the 2-Clause BSD License or the MIT/x11 Licenses.
+
+//This is a modification of the avrcraft IP stack.
+
 #include "net_compat.h"
 #include <string.h>
 #include "packetmater.h"
@@ -41,123 +45,6 @@ ICACHE_FLASH_ATTR uint16_t internet_checksum( const unsigned char * start, uint1
 }
 
 
-#if 0
-void et_backend_tick_quick()
-{
-	int i;
-	//First, check to see if we already have a kept packet.
-	if( KeepNextPacket )
-	{
-		for( i = 0; i < STOPKT; i++ )
-		{
-			if( KeepNextPacket && PacketStoreFlags[i] == 3 )
-			{
-				KeepNextPacket = 0;
-			}
-		}
-	}
-
-	for( i = 0; i < STOPKT; i++ )
-	{
-		if( PacketStoreFlags[i] == 2 )
-		{
-			int r;
-			int j;
-			//Found a complete packet.  Decode it.
-			uint32_t * dat = &PacketStore[i*STOPKTSIZE];
-			uint16_t len = PacketStoreLength[i];
-
-//#define DEBUG_RAW
-#ifdef DEBUG_RAW
-			for( j = 0; j < len; j++ )
-			{
-				uint32_t rr = dat[j];
-				for( r = 0; r < 32; r++ )
-				{
-					printf( (rr & (1<<(31-r)))?"1":"0" );
-				}
-			}
-#endif
-			ResetPacketInternal( dat[1] );
-
-			//This secton detects if a new packet is present and runs the demanchester code on it.
-
-			if( KeepNextPacket == 1 )
-			{
-				ets_intr_lock();
-				g_process_paktime = system_get_time();
-			}
-
-			r = DecodePacket( &dat[1], len-1 ); //Skip first byte.
-
-			if( KeepNextPacket == 1 )
-			{
-				g_process_paktime = system_get_time() - g_process_paktime;
-				ets_intr_unlock();
-			}
-
-
-extern uint32_t g_process_paktime;
-
-g_process_paktime -= system_get_time();
-g_process_paktime += system_get_time();
-
-
-
-
-
-			//Careful: If we have a bad packet, and we've been told to keep our hands on the last failed packet this is it!
-			if( r < 0 && KeepNextPacket == 2 )
-			{
-				PacketStoreFlags[i] = 3;
-				KeepNextPacket = 0;
-			}
-			else
-			{
-				//Tell DMA code we've gotten the packet out of the hands of the DMA engine.
-				PacketStoreFlags[i] = (KeepNextPacket==1)?3:0;
-				if( KeepNextPacket == 1 )
-				{
-					KeepNextPacket = 0;
-				}
-			}
-
-			if( r > 0 )
-			{
-				//Got a packet!
-
-//#define PRINTPACK
-#ifdef PRINTPACK
-				int i;
-				for( i = 0; i < current_packet_rec_place; i++ )
-				{
-					printf( "%02x", ((uint8_t*)current_packet)[i] );
-				}
-				printf( "\n" );
-#endif
-				int byr = current_packet_rec_place;
-				uint32_t cmpcrc = crc32( ETbuffer, byr - 4 );
-				uint32_t checkcrc = (ETbuffer[byr-1] << 24)|(ETbuffer[byr-2] << 16)|(ETbuffer[byr-3] << 8)|(ETbuffer[byr-4]);
-
-				if( cmpcrc == checkcrc )
-				{
-					//If you ever get to this code, a miracle has happened.
-					//Pray that many more continue.
-					ETsendplace = 0;
-//					printf( "ETCB %d\n", byr );
-					et_receivecallback( byr - 4 );
-				}
-				else
-				{
-					printf( "CRCERR\n" );
-				}
-			}
-		}
-	}
-}
-
-#else
-
 void ICACHE_FLASH_ATTR et_backend_tick_quick()
 {
 	int i;
@@ -196,8 +83,6 @@ void ICACHE_FLASH_ATTR et_backend_tick_quick()
 	}
 }
 
-
-#endif
 
 ICACHE_FLASH_ATTR void et_backend_tick_slow()
 {
@@ -399,26 +284,4 @@ uint16_t et_read_ctrl_reg16( uint8_t addy )
 
 
 
-/*
-     Modification of "avrcraft" IP Stack.
-    Copyright (C) 2014 <>< Charles Lohr
-		CRC Code from: http://www.hackersdelight.org/hdcodetxt/crc.c.txt
 
-    Permission is hereby granted, free of charge, to any person obtaining a
-	copy of this software and associated documentation files (the "Software"),
-	to deal in the Software without restriction, including without limitation
-	the rights to use, copy, modify, merge, publish, distribute, sublicense,
-	and/or sell copies of the Software, and to permit persons to whom the
-	Software is furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included
-	in all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-	IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-	CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-	TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-	SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/

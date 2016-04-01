@@ -1,4 +1,4 @@
-//Copyright 2012 Charles Lohr under the MIT/x11, newBSD, LGPL or GPL licenses.  You choose.
+//Copyright 2012-2016 Charles Lohr under the MIT/x11, newBSD, LGPL or GPL licenses.  You choose.  It was originally licensed under the MIT/x11 License.  See notice at bottom.
 
 #ifndef _IPARPETC_H
 #define _IPARPETC_H
@@ -111,7 +111,6 @@ static inline void TickDHCP() { }
 /*
      Modification of "avrcraft" IP Stack.
     Copyright (C) 2014 <>< Charles Lohr
-		CRC Code from: http://www.hackersdelight.org/hdcodetxt/crc.c.txt
 
     Permission is hereby granted, free of charge, to any person obtaining a
 	copy of this software and associated documentation files (the "Software"),

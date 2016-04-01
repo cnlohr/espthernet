@@ -103,6 +103,8 @@ ICACHE_FLASH_ATTR uint32_t crc32(const uint8_t *p, size_t size)
 #else
 
 
+//CRC Code from: http://www.hackersdelight.org/hdcodetxt/crc.c.txt
+
 ICACHE_FLASH_ATTR uint32_t crc32( const uint8_t *message, int len) {
 	int i, j;
 	uint32_t mask;

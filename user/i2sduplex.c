@@ -1,4 +1,4 @@
-//Copyright 2016 <>< Charles Lohr, see LICENSE file.
+//Copyright 2015-2016 <>< Charles Lohr, see LICENSE file.  This file is licensed under the 2-Clause BSD License.
 
 //ESP8266 I2S Input+Output
 //This is BASED OFF OF, but DIFFERENT THAN the github project http://github.com/cnlohr/esp8266duplexi2s
