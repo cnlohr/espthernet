@@ -6,6 +6,16 @@
 #include <c_types.h>
 #include <eth_config.h>
 
+//
+// This file handles accepting all data from the I2S subsystem, via GotNewI2SData.
+// When it suspects a new packet, it calls ResetPacketInternal.  After that
+// it then passes data off to "DecodePacket" which handles demanchestration and loads the packet
+// into a free RXBUFS.
+//
+// On the sending end, it accepts a packet via SendPacketData and manchester encodes it.
+// Once it's manchester encoded, it passes it off to the I2S subsystem via SendI2SPacket
+//
+
 //Assuming operating frequency of 40 MHz.
 //It must have a BIAS.  If BIAS is toward 0, set ZERO_BIAS
 #define ZERO_BIAS
@@ -29,11 +39,15 @@ extern uint8_t gotlink;
 int ResetPacketInternal( );  //First is currently unused.  If nonzero, failed.
 int8_t VerifyEtherlinkCRC(); //-1 = FAIL.  0 = PASS.
 
-//return vales:
+//return vales:  (Internal function)
 // + = suspected error or end of packet.  Return is # of bytes read.
 // 0 = Give me more data.
 //Progress not updated on data continuation.
+//This function assumes you've started a packet in the preamble and goes from there.
 int32_t DecodePacket( uint32_t * pak, uint16_t len );
+
+//Pass data to demanchestrate from the I2S bus.  This passes all data blindly.
+void	GotNewI2SData( uint32_t * dat, int datlen );
 
 #endif
 

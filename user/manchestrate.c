@@ -33,7 +33,7 @@ extern uint32_t g_process_paktime;
 
 
 
-
+//This is called before manchester coded data is shifted into DecodePacket.
 int ResetPacketInternal()
 {
 	int i;
@@ -64,11 +64,8 @@ int ResetPacketInternal()
 }
 
 
-
-//Return -6 if terminate search... end of packet: 1
-//Return 0 of bytes read if good.
-
-//inline static int8_t Demanchestrate( uint32_t v )
+//Returns 0 if packet was exhausted before finding an end-of-packet marker.
+//Returns n if packet contained invalid codes (like an end of packet) within this function.
 int32_t DecodePacket( uint32_t * dat, uint16_t len )
 {
 	//XXX TRICKY: GCC does an extra operation to downconvert to bits when operating with this value.  It is safe to leave as a 32-bit value.
@@ -250,7 +247,6 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 		//More data is to come.
 		gl_dataoutword = dataoutword;
 		gl_dataoutplace = dataoutplace;
-//		current_packet_rec_place = lcl_current_packet_rec_place;
 		current_packet_rec_place = cpr - (uint8_t*)current_packet;
 		gl_state1 = state1;
 		return 0;
@@ -464,11 +460,13 @@ void ICACHE_FLASH_ATTR SendPacketData( const unsigned char * c, uint16_t len )
 
 	len*=4;
 
+	//For some reason the ESP's DMA engine trashes something in the beginning here, Don't send the preamble until after the first 128 bits.
 
 	*(sDMA++) = 0;
 	*(sDMA++) = 0;
 	*(sDMA++) = 0;
 	*(sDMA++) = 0;
+
 	PushManch( 0x55 );
 	PushManch( 0x55 );
 	PushManch( 0x55 );
@@ -479,9 +477,6 @@ void ICACHE_FLASH_ATTR SendPacketData( const unsigned char * c, uint16_t len )
 	PushManch( 0xD5 );
 
 	while(!i2stxdone);
-
-	//For some reason the ESP's DMA engine trashes something in the beginning here, Don't send the preamble until after the first 128 bits.
-
 
 	const unsigned char * endc = c + len;
 	while( c != endc )

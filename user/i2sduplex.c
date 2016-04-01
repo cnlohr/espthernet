@@ -76,9 +76,6 @@ LOCAL void slc_isr(void) {
 	uint32 slc_intr_status;
 	int x;
 
-//int kg = 0;
-//keepgoing:
-
 	slc_intr_status = READ_PERI_REG(SLC_INT_STATUS);
 
 	//clear all intr flags
