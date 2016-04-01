@@ -30,10 +30,7 @@ Option 1: Use a line driver like the ILS3371 and ethernet magnetics and terminat
 Option 2: Just jam some capacitors and resistors onto the input and hope for the best.  This is potentially hazardous and may not work on many devices.  Be ready to be disappointed.
 
 
-
-<img src="url" alt="alt text" width="whatever" height="whatever">
-
-![Magneticless 10BASE-T Ethernet](hardware/nodemcu-ethernet.png | =250x)
+![](hardware/nodemcu-ethernet.png | =250x)
 
 Overall, just about any 10 mbit magnetics should do, and line drivers make things a lot better, especially if they have a bandwidth of 20 MHz.  Note that you absolutely must bias the incoming signal toward 0, so there will be slightly more 0's on the input stream than 1's.
 
