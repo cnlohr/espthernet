@@ -25,9 +25,9 @@ For the user layer, this system just borrows everything from avrcraft, including
 
 ## Hardware
 
-Option 1: Use a line driver like the ILS3371 and ethernet magnetics and terminator.  This is superior, and likely to work in many situations except with stringent hardware and long cable runs. An example can be found in the [esp12e-ethernet.pdf](hardware/esp12e-ethernet.pdf).
+Option 1: ***recommended*** Use a line driver like the ILS3371 and ethernet magnetics and terminator.  This is superior, and likely to work in many situations except with stringent hardware and long cable runs. An example can be found in the [esp12e-ethernet.pdf](hardware/esp12e-ethernet.pdf).
 
-Option 2: Just jam some capacitors and resistors onto the input and hope for the best.  This is potentially hazardous and may not work on many devices.  Be ready to be disappointed.
+Option 2: ***not recommended*** Just jam some capacitors and resistors onto the input and hope for the best.  This is potentially hazardous and may not work on many devices.  Be ready to be disappointed.
 
 
 <A HREF="hardware/nodemcu-ethernet.png"><img src="hardware/nodemcu-ethernet.png" width=250px></a>
