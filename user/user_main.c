@@ -106,9 +106,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 
 
 //Uncomment this to force a system restore.
-//	system_restore();
+	system_restore();
 
-#define FORCE_SSID 1
+#define FORCE_SSID 0
 
 #if FORCE_SSID
 
