@@ -28,7 +28,8 @@ For the user layer, this system just borrows everything from avrcraft, including
 Option 1: Use a line driver like the ILS3371 and ethernet magnetics and terminator.  This is superior, and likely to work in many situations except with stringent hardware and long cable runs. An example can be found in the [esp12e-ethernet.pdf](hardware/esp12e-ethernet.pdf).
 
 Option 2: Just jam some capacitors and resistors onto the input and hope for the best.  This is potentially hazardous and may not work on many devices.  Be ready to be disappointed.
-![Magneticless 10BASE-T Ethernet](hardware/nodemcu-ethernet.png "Magneticless 10BASE-T Ethernet" =250x)
+
+![Magneticless 10BASE-T Ethernet](hardware/nodemcu-ethernet.png =250x)
 
 Overall, just about any 10 mbit magnetics should do, and line drivers make things a lot better, especially if they have a bandwidth of 20 MHz.  Note that you absolutely must bias the incoming signal toward 0, so there will be slightly more 0's on the input stream than 1's.
 
