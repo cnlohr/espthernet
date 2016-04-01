@@ -6,7 +6,7 @@ ESP8266 + I2S = Software-based 10-Base-T Ethernet Driver
 
 For a detailed overview of how this project works, please see the [Hackaday article](http://hackaday.com/2016/04/01/ethernet-controller-discovered-in-the-esp8266/).  For a rough idea of what's going on, checkout the youtube video:
 
-[![10BASE-T discovered on the ESP](https://img.youtube.com/vi/YXKnyAYKP434/0.jpg)](https://www.youtube.com/watch?v=XKnyAYKP434)
+[![10BASE-T discovered on the ESP](https://img.youtube.com/vi/XKnyAYKP434/0.jpg)](https://www.youtube.com/watch?v=XKnyAYKP434)
 
 
 ## Overall Discussion
@@ -28,7 +28,7 @@ For the user layer, this system just borrows everything from avrcraft, including
 Option 1: Use a line driver like the ILS3371 and ethernet magnetics and terminator.  This is superior, and likely to work in many situations except with stringent hardware and long cable runs. An example can be found in the [esp12e-ethernet.pdf](hardware/esp12e-ethernet.pdf).
 
 Option 2: Just jam some capacitors and resistors onto the input and hope for the best.  This is potentially hazardous and may not work on many devices.  Be ready to be disappointed.
-![Hardwareless](hardware/nodemcu-ethernet.png "Magneticless 10BASE-T Ethernet")
+![](hardware/nodemcu-ethernet.png "Magneticless 10BASE-T Ethernet" =250x)
 
 Overall, just about any 10 mbit magnetics should do, and line drivers make things a lot better, especially if they have a bandwidth of 20 MHz.  Note that you absolutely must bias the incoming signal toward 0, so there will be slightly more 0's on the input stream than 1's.
 
