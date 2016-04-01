@@ -23,6 +23,12 @@ From there, we can check the FCS and process the packets in a consistent way and
 
 For the user layer, this system just borrows everything from avrcraft, including the http server!  You will notice that it's a little awkward since it's designed to operate with either the TCP/IP stack from Espressif OR the avrcraft TCP/IP server.  It would be really cool if we could figure out some way to have consistent entry.
 
+## The Web Interface
+
+There is a web interface that gets put on the ESPs with a "make" step from the "web" directory.  It pushes the webpage to the ESP.  The webpage does not need to live on the ESP, itself, it can be viewed independent of one, it just only supports the "Load Test Packet" feature in "Last Packet" [version on github.io](http://cnlohr.github.io/espthernet/web/page/). 
+
+The webpage is what is used to look at packets, create the demanchestration table, [demanchestrate_table.h](user/demanchestrate_table.h) and test the table on new data.  This was needed considering how complicated the decoding process is.  Without testing on data, a lot of data, coming up with a robust algorithm was almost impossible!!! One other feature in the web interface is you can click on the 1's and 0's and turn them on and off to see how the system decodes those packets.
+
 ## Hardware
 
 Option 1: ***recommended*** Use a line driver like the ILS3371 and ethernet magnetics and terminator.  This is superior, and likely to work in many situations except with stringent hardware and long cable runs. An example can be found in the [esp12e-ethernet.pdf](hardware/esp12e-ethernet.pdf).
