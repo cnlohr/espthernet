@@ -36,7 +36,7 @@ $Descr User 5315 4724
 encoding utf-8
 Sheet 1 1
 Title "NodeMCU 10-Base-T Wiring Diagram"
-Date "1 apr 2016"
+Date "2 apr 2016"
 Rev "-"
 Comp "(C) 2016 <>< Charles Lohr"
 Comment1 "CC 3.0 BY"
@@ -140,7 +140,7 @@ F 3 "~" H 2000 950 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3350 2100 1750 2100
+	1750 2100 3800 2100
 Wire Wire Line
 	2400 2000 2400 2100
 Connection ~ 2400 2100
@@ -159,17 +159,10 @@ Text Notes 3450 1100 0    60   ~ 0
 >>>DATA FLOW>>>
 Text GLabel 3800 1150 2    60   Input ~ 0
 ET_PIN3_TX+
-Text GLabel 3800 1800 2    60   Input ~ 0
+Text GLabel 3800 2100 2    60   Input ~ 0
 ET_PIN2_RX-
-Text GLabel 3800 1950 2    60   Input ~ 0
+Text GLabel 3800 2200 2    60   Input ~ 0
 ET_PIN2_TX-
-Wire Wire Line
-	3800 1950 3350 1950
-Wire Wire Line
-	3350 1800 3350 2100
-Wire Wire Line
-	3350 1800 3800 1800
-Connection ~ 3350 1950
 Wire Wire Line
 	1800 950  1750 950 
 Wire Wire Line
@@ -184,34 +177,30 @@ Wire Wire Line
 	2200 950  2250 950 
 Wire Wire Line
 	2250 950  2250 1500
-$Comp
-L C C3
-U 1 1 56FB5B40
-P 2750 1750
-F 0 "C3" H 2750 1950 79  0000 L CNN
-F 1 "1pF" H 2750 1450 79  0000 L CNN
-F 2 "~" H 2788 1600 30  0000 C CNN
-F 3 "~" H 2750 1750 60  0000 C CNN
-	1    2750 1750
-	-1   0    0    1   
-$EndComp
-Wire Wire Line
-	2750 1350 2750 1550
-Connection ~ 2750 1350
-Wire Wire Line
-	2750 1950 2750 2100
-Connection ~ 2750 2100
-Text GLabel 1750 1500 0    60   Input ~ 0
-ANT (Optional)
-Wire Wire Line
-	1750 1500 1900 1500
-Wire Wire Line
-	1900 1500 1900 1350
-Connection ~ 1900 1350
-Text Notes 500  1650 0    60   ~ 0
-An antenna may be used instead\nof C3.  This is used to radiate\nhigher freuqencies to get a\ncleaner signal at 20 MHz.
 Wire Wire Line
 	2400 1500 2400 750 
 Wire Wire Line
 	2400 750  2200 750 
+Wire Wire Line
+	3650 2100 3650 2200
+Wire Wire Line
+	3650 2200 3800 2200
+Connection ~ 3650 2100
+$Comp
+L R R4
+U 1 1 56FF541F
+P 3550 1750
+F 0 "R4" H 3700 1700 79  0000 C CNN
+F 1 "680" H 3700 1850 79  0000 C CNN
+F 2 "~" V 3480 1750 30  0000 C CNN
+F 3 "~" H 3550 1750 30  0000 C CNN
+	1    3550 1750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3550 1500 3550 1350
+Connection ~ 3550 1350
+Wire Wire Line
+	3550 2000 3550 2100
+Connection ~ 3550 2100
 $EndSCHEMATC
