@@ -18,11 +18,24 @@ function KickLastPacket()
 	}
 }
 
+function tohex16( c )
+{
+	if( c == null ) return "-";
+	var hex = c.toString(16);
+	if( hex.length == 4 ) return hex;
+	if( hex.length == 3 ) return "0" + hex;
+	if( hex.length == 2 ) return "00" + hex;
+	else return "000" + hex;
+}
+
+
 function tohex12( c )
 {
 	if( c == null ) return "-";
 	var hex = c.toString(16);
-	return hex.length == 1 ? "00" + hex : ( hex.length == 2 ? "0" + hex : hex );
+	if( hex.length == 3 ) return "" + hex;
+	if( hex.length == 2 ) return "0" + hex;
+	else return "00" + hex;
 }
 
 
@@ -428,6 +441,7 @@ function RunOnData()
 		var upperlast = (i>>8)&1;//1 bit
 		var chi = (i>>5)&7;      //3 bits
 		var inton = (i>>4)&1;    //1 bit
+		var startinton = inton;
 		var newbits = i & 15;    //4 bits
 
 
@@ -436,6 +450,7 @@ function RunOnData()
 		var intonout = 0;		//1 bit
 		var opout = 0;			//4 bits  upper-two: # of bits in output.  Bottom-2: actual bits.
 		var wouldexitpreamble = false;
+		var waslastlong = false;
 
 		if( chi == 7 )
 		{
@@ -490,6 +505,8 @@ function RunOnData()
 
 						emit = true;
 						invert = true;
+
+						waslastlong = true;
 					}
 					else
 					{
@@ -504,6 +521,8 @@ function RunOnData()
 						{
 							inton = true;
 						}
+
+						waslastlong = false;
 					}
 
 					if( emit )
@@ -558,6 +577,7 @@ function RunOnData()
 		code |= upperlast<<8;
 		code |= polarity<<9;
 		code |= (wouldexitpreamble)?(1<<10):0;
+		code |= (startinton && ((opout & 0x0c) == 8 ))?(1<<11):0;
 
 		Table1.push( code );
 	}	
@@ -578,6 +598,7 @@ function RunOnData()
 //\n\
 //Outputs:\n\
 //MSB\n\
+// 1 Bit:  Intonation started in frame before AND we have two shorts this frame (usually, for exiting preambles) This indicates special case.\n\
 // 1 Bit:  Would exit preamble if in preamble\n\
 // 1 Bit:  New Polarity.\n\
 // 1 Bit:  Upper bit of last nibble\n\
@@ -689,9 +710,6 @@ function RunOnData()
 			}
 		}
 
-
-		state1 &= 0x3f0;
-
 		// state1.10 = Set because we exited polarity.
 		// state1.9 = Polarity
 		// state1.8 = Upper Last (Don't care)
@@ -699,23 +717,34 @@ function RunOnData()
 		// state1.4 = Intonation
 		// state1.0..3 = Bit outputs.
 
-		//When we get here, we could have:
-		// Gotten at least TWO shorts!
-		// TODO: What if we got two shorts terminating the stream and a long (which is possible)
-
-		//We would have a bit output that is the same polarity as "polarity."  I think? this is the only thing we need to watch out for?
-
-		//Either way, when exiting polarity should be high (I think?)
-		//We might have hit one or two shorts, but shouldn't be more... And, either way it goes, 
-
-		//TODO: This is actually wrong!!!
-		state1 |= 0x200; 
-
 		var dataoutword = 0;
 		var dataoutplace = 0;
 
 		bytesoutplaces.push( bytesoutsofar ); bytesoutsofar = 0;
 		bytesout.push( "" );
+
+
+		//When we get here, we may have had one or two or ??? 
+
+		//When we get here, we expect to have gotten two shorts... but, it could be three TOTAL.
+		//If it's two, all is well.. if it's 3... we have to be a little more careful.
+		//We can see if it was 3 by seeing if intonation in was set.  If it was, then we know
+		//We're on the 3rd.
+		if( ( state1 & 0x800 ) )  //Indicates two bits were just outputted in the last nibble AND we were going in on an intonation.
+		{
+			//Very rare, but it does happen!!!
+			dataoutplace = 1;
+			dataoutword = 0;
+			state1 &=~(1<<9);
+		}
+		else
+		{
+			//Only had 2 values sent, always set polarity to high.
+			//Set 'polarity'
+			state1 |= 0x200;
+		}
+
+		state1 &= 0x3f0; //& please Clear polarity????
 
 
 		for( ; i < DWORDS.length; i++ )

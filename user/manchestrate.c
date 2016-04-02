@@ -119,7 +119,6 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 				state1 = ManchesterTable1[state1];
 				if( (state1 & 0x400) )  //Break in the preamble!
 				{
-					state1 &= 0x3f0;
 					in_preamble = 0;
 					nibble-=4;
 					break;
@@ -129,9 +128,25 @@ int32_t DecodePacket( uint32_t * dat, uint16_t len )
 
 			if( !in_preamble )
 			{
-				//Handle messy logic of going into regular from preamble.
-				//XXX TODO: It is possible (likely) this line may be insufficient.
-				state1 |= 0x200;
+				//When we get here, we expect to have gotten two shorts... but, it could be three TOTAL.
+				//If it's two, all is well.. if it's 3... we have to be a little more careful.
+				//We can see if it was 3 by seeing if intonation in was set.  If it was, then we know
+				//We're on the 3rd.
+				if( ( state1 & 0x800 ) )  //Indicates two bits were just outputted in the last nibble.
+				{
+					dataoutplace = 1;
+					dataoutword = 0;
+					state1 &=~(1<<9);
+				}
+				else
+				{
+					//Only had 2 values sent, always set polarity to high.
+					//Set 'polarity'
+					state1 |= 0x200;
+				}
+
+				state1 &= 0x3f0;
+
 				break;
 			}
 
@@ -434,7 +449,7 @@ keep_going:
 //The code down here is for sending, Manchester Encoding data.
 extern volatile uint8_t i2stxdone;
 
-uint32_t sendDMAbuffer[MAX_FRAMELEN+8+4+4] __attribute__ ((aligned (16)));
+uint32_t sendDMAbuffer[MAX_FRAMELEN+8+6+6] __attribute__ ((aligned (16)));
 uint32_t * sDMA;
 
 static const uint16_t ManchesterTable[16] __attribute__ ((aligned (16))) = {
@@ -462,10 +477,10 @@ void ICACHE_FLASH_ATTR SendPacketData( const unsigned char * c, uint16_t len )
 
 	//For some reason the ESP's DMA engine trashes something in the beginning here, Don't send the preamble until after the first 128 bits.
 
-	*(sDMA++) = 0;
-	*(sDMA++) = 0;
-	*(sDMA++) = 0;
-	*(sDMA++) = 0;
+	*(sDMA++) = 0x00;
+	*(sDMA++) = 0x00;
+	*(sDMA++) = 0x00;
+	*(sDMA++) = 0x00;
 
 	PushManch( 0x55 );
 	PushManch( 0x55 );
@@ -484,10 +499,15 @@ void ICACHE_FLASH_ATTR SendPacketData( const unsigned char * c, uint16_t len )
 		char g = *(c++);
 		PushManch( g );
 	}
-	*(sDMA++) = 0;
-	*(sDMA++) = 0;
-	*(sDMA++) = 0;
-	*(sDMA++) = 0;
+
+	//Ok, this last part seems super tricky.
+	//If we're hooked up to magnetics through a line driver, it should be  0x00000000
+	//If we're hooked up directly, should be 0xffffffff
+	//This appeared to be a good compromise.
+	*(sDMA++) = 0xfff00000;
+	*(sDMA++) = 0x00;
+	*(sDMA++) = 0x00;
+	*(sDMA++) = 0x00;
 
 	SendI2SPacket( sendDMAbuffer, sDMA - sendDMAbuffer );
 }
