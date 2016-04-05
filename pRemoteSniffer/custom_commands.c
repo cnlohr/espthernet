@@ -14,6 +14,11 @@
 //
 //This file was programmed for use with espthernet.
 
+//This file in particular handles all of the packet capture stuff.
+// Thanks to: https://github.com/ernacktob/esp8266_wifi_raw for figuring a lot of that out.
+//
+//TODO: Figure out if https://github.com/cnlohr/esp8266rawpackets/blob/master/user/esp_rawsend.c can be applied.
+
 int current_channel = 0;
 uint32_t packetct = 0;
 
