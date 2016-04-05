@@ -104,6 +104,7 @@ struct _esp_tcp interop_tcps[TCP_SOCKETS];
 void  ICACHE_FLASH_ATTR  et_TCPConnectionClosing( uint8_t i )
 {
 	//printf( "CLOSE CALLBACK\n" );
+
 	if( interop_conns[i].proto.tcp->disconnect_callback )
 	{
 		 interop_conns[i].proto.tcp->disconnect_callback( &interop_conns[i] );
@@ -127,15 +128,24 @@ void ICACHE_FLASH_ATTR et_espconn_disconnect( struct espconn * pespconn )
 }
 
 
+int ICACHE_FLASH_ATTR HandleIncomingEthernetSyn( int portno );
 
 uint8_t ICACHE_FLASH_ATTR et_TCPReceiveSyn( uint16_t portno )
 {
+	int ret;
+
+	ret = HandleIncomingEthernetSyn( portno );
+	if( ret )
+	{
+		return ret;
+	}
+
 	if( portno != 80 )
 	{
 		return 0;
 	}
 
-	int ret = et_GetFreeConnection();
+	ret = et_GetFreeConnection();
 	
 	if( ret )
 	{

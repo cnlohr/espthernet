@@ -37,6 +37,7 @@ char ICACHE_FLASH_ATTR * strcat( char * dest, char * src )
 	return strcat(dest, src );
 }
 
+void ICACHE_FLASH_ATTR TickPacketSet( int slow );
 
 //Tasks that happen all the time.
 
@@ -47,7 +48,7 @@ static void ICACHE_FLASH_ATTR procTask(os_event_t *events)
 {
 
 	et_backend_tick_quick();
-
+	TickPacketSet( 0 );
 	CSTick( 0 );
 	system_os_post(procTaskPrio, 0, 0 );
 }
@@ -60,6 +61,7 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 	et_backend_tick_slow();
 	TickTCP();
 	CSTick( 1 );
+	TickPacketSet( 1 );
 }
 
 void ICACHE_FLASH_ATTR HandleUDP( uint16_t len )
@@ -92,62 +94,20 @@ void ICACHE_FLASH_ATTR HandleUDP( uint16_t len )
 
 }
 
-int ICACHE_FLASH_ATTR HandleIncomingEthernetSyn( int portno )
-{
-	//We have no extra special TCP servers running in this demo.
-}
 
 void ICACHE_FLASH_ATTR charrx( uint8_t c )
 {
 	//Called from UART.
 }
 
+void ICACHE_FLASH_ATTR sniffer_system_init_done(void);
 void ICACHE_FLASH_ATTR user_init(void)
 {
 	uart_init(BIT_RATE_115200, BIT_RATE_115200);
 
 	uart0_sendStr("\r\nesp8266 driver\r\n");
 
-
-//Uncomment this to force a system restore.
-	system_restore();
-
-#define FORCE_SSID 0
-
-#if FORCE_SSID
-
-#include "ssid_info.h"
-
-#endif
-
-	//Override wifi.
-#if FORCE_SSID
-	{
-		struct station_config stationConf;
-		wifi_station_get_config(&stationConf);
-		os_strcpy((char*)&stationConf.ssid, SSID );
-		os_strcpy((char*)&stationConf.password, PSWD );
-		stationConf.bssid_set = 0;
-		wifi_station_set_config(&stationConf);
-		wifi_set_opmode(1);
-	}
-#endif
-
-	CSSettingsLoad( 0 );
-
-	CSPreInit();
-	//Override wifi.
-#if FORCE_SSID
-	{
-		struct station_config stationConf;
-		wifi_station_get_config(&stationConf);
-		os_strcpy((char*)&stationConf.ssid, SSID );
-		os_strcpy((char*)&stationConf.password, PSWD );
-		stationConf.bssid_set = 0;
-		wifi_station_set_config(&stationConf);
-		wifi_set_opmode(1);
-	}
-#endif
+    wifi_set_opmode(STATION_MODE);
 
 	CSInit();
 
@@ -177,6 +137,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 	system_update_cpu_freq( SYS_CPU_160MHZ );
 
 	system_os_post(procTaskPrio, 0, 0 );
+
+    // Continue to 'sniffer_system_init_done'
+    system_init_done_cb(sniffer_system_init_done);
 }
 
 

@@ -1,7 +1,7 @@
 #ifndef _CRC32_H
 #define _CRC32_H
 
-#include "eth_config.h"
+#include <eth_config.h>
 
 //Accepts "TABLE_CRC" which takes 512 extra bytes, but is wwaaaayyyy faster
 

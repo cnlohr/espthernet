@@ -4,22 +4,22 @@ TARGET_OUT:=image.elf
 all : $(TARGET_OUT) $(FW_FILE_1) $(FW_FILE_2)
 
 
-SRCS:=driver/uart.c \
-	common/http.c \
-	common/mystuff.c \
-	common/flash_rewriter.c \
-	common/commonservices.c \
-	common/http_custom.c \
-	common/mdns.c \
-	common/mfs.c \
-	user/custom_commands.c \
-	user/i2sduplex.c \
-	user/user_main.c \
-	user/manchestrate.c \
-	etherhelp/net_compat.c \
-	etherhelp/crc32.c \
-	etherhelp/tcp.c \
-	etherhelp/iparpetc.c
+SRCS:=../driver/uart.c \
+	../common/http.c \
+	../common/mystuff.c \
+	../common/flash_rewriter.c \
+	../common/commonservices.c \
+	../common/http_custom.c \
+	../common/mdns.c \
+	../common/mfs.c \
+	custom_commands.c \
+	../user/i2sduplex.c \
+	user_main.c \
+	../user/manchestrate.c \
+	../etherhelp/net_compat.c \
+	../etherhelp/crc32.c \
+	../etherhelp/tcp.c \
+	../etherhelp/iparpetc.c
 
 
 GCC_FOLDER:=~/esp8266/esp-open-sdk/xtensa-lx106-elf
@@ -36,7 +36,7 @@ PREFIX:=$(FOLDERPREFIX)/xtensa-lx106-elf-
 CC:=$(PREFIX)gcc
 
 
-CFLAGS:=-mlongcalls -I$(SDK)/include -Imyclib -Iinclude -Iuser -Os -I$(SDK)/include/ -Icommon -DICACHE_FLASH -Ietherhelp
+CFLAGS:=-mlongcalls -I$(SDK)/include -I. -I../include -I../user -Os -I$(SDK)/include/ -I../common -DICACHE_FLASH -I../etherhelp
 CFLAGS:= $(CFLAGS)	-Wl,--gc-sections -flto
 
 #Enable full duplex?

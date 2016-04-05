@@ -1,0 +1,60 @@
+<html>
+<!-- Copyright (C) 2016 <>< Charles Lohr, see LICENSE file for more info.
+This particular file may be licensed under the MIT/x11, New BSD or ColorChord Licenses. -->
+<head>
+<title>espthernet - wifcap - console</title>
+<script language="javascript" type="text/javascript" src=jquery-2.1.4.min.js.gz></script>
+<script language="javascript" type="text/javascript" src=menuinterface.js></script>
+<script language="javascript" type="text/javascript" src=main.js></script>
+<meta charset="UTF-8">
+<style>
+table { width: 100%; }
+td { vertical-align: top; }
+.collapsible { display:none; }
+.inbutton { background-color:blue; }
+#SystemMessage { position: fixed; top: 5px; background-color: DarkSlateBlue; color: #ffffff; left: 5px; display:none; }
+.dragandrophandler { border:2px dotted #0B85A1; color:#92AAB0;vertical-align:middle;padding:10px 10px 10 10px;margin-bottom:10px;font-size:200%;}
+.unsaved-input { border: 2px solid pink; border-radius: 7px; }
+</style>
+</head>
+<body>
+<h2>espthernet - wifcap - console</h2>
+<hr>
+
+
+
+<table id="MainMenu">
+
+<tbody>
+
+<tr><td width=1>
+<input type=submit onclick="ShowHideEvent( 'Introduction' );" value="Introduction"></td><td>
+<div id=Introduction class="collapsible">
+<table border=1><tr><td>
+<p>Welcome to the espthernet Web-based GUI.</p>
+<p>This GUI uses WebSockets, and has only been tested under the newest (as of March, 2016) Chrome and Firefox browsers.</p>
+<p>For more information about this project, visit it on github, here: <a href=https://github.com/cnlohr/espthernet>https://github.com/cnlohr/espthernet</a></p>
+<BR>
+</div></td></tr></table></td></tr>
+
+<tr><td width=1>
+<input type=submit onclick="ShowHideEvent( 'WicapSettings' ); WicapSettings();" value="Capture Status" STYLE=""></td><td>
+<div id=WicapSettings class="collapsible">
+
+
+<TABLE WIDTH=10%>
+<TR><TD>Channel: <INPUT type=text id=channel value=- onchange="setChannel();"> <INPUT type=submit value="Get" onclick="getChannel();"></TD></TR>
+<TR><TD><DIV ID=netstats></DIV></TD></TR>
+</TABLE>
+
+</div></td></tr>
+
+</tbody>
+</table>
+
+<p><font size=-2>Copyright (C) 2016 &lt&gt&lt Charles Lohr, See LICENSE file for more info.</font></p>
+<div id=SystemMessage>...</div>
+</body>
+</html>
+
+

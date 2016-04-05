@@ -8,7 +8,7 @@
 
 //Stuff that should be for the header:
 
-#include "eth_config.h"
+#include <eth_config.h>
 #include <c_types.h>
 
 //General notes:
@@ -21,7 +21,7 @@
 #define RX_NUM (I2SDMABUFLEN)
 #define LINE32LEN I2SDMABUFLEN
 
-#define I2STXZERO 64
+#define I2STXZERO 128
 
 extern uint32_t i2sBDRX[I2SDMABUFLEN*DMABUFFERDEPTH];
 

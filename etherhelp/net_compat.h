@@ -12,7 +12,7 @@
 //to make sure we send media detect pulses at the right points.
 //Also, as a user, you cannot use the USI or Timer0
 
-#include "eth_config.h"
+#include <eth_config.h>
 #include "mystuff.h"
 #include <c_types.h>
 
