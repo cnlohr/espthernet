@@ -1,6 +1,6 @@
 all : execute_reflash page.mpfs push 
 
-IP?=192.168.4.1
+IP?=10.1.10.5
 
 mfsmaker : mfsmaker.c
 	gcc -o $@ $^

@@ -1,8 +1,6 @@
-FW_FILE_1:=0x00000.bin
-FW_FILE_2:=0x40000.bin
 TARGET_OUT:=image.elf
-all : $(TARGET_OUT) $(FW_FILE_1) $(FW_FILE_2)
-
+FW_FILES:=image.elf-0x00000.bin image.elf-0x40000.bin
+all : $(TARGET_OUT) $(FW_FILES)
 
 SRCS:=driver/uart.c \
 	common/http.c \
@@ -22,12 +20,11 @@ SRCS:=driver/uart.c \
 	etherhelp/iparpetc.c
 
 
-GCC_FOLDER:=~/esp8266/esp-open-sdk/xtensa-lx106-elf
-ESPTOOL_PY:=~/esp8266/esptool/esptool.py
-FW_TOOL:=~/esp8266/other/esptool/esptool
-SDK:=/home/cnlohr/esp8266/esp_iot_sdk_v1.5.1
+ESP_OPEN_SDK:=~/esp-open-sdk
+GCC_FOLDER:=$(ESP_OPEN_SDK)/xtensa-lx106-elf
+ESPTOOL_PY:=$(ESP_OPEN_SDK)/esptool/esptool.py
+SDK:=$(ESP_OPEN_SDK)/esp_iot_sdk_v1.5.2
 PORT:=/dev/ttyUSB0
-#PORT:=/dev/ttyACM0
 
 XTLIB:=$(SDK)/lib
 XTGCCLIB:=$(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/4.8.2/libgcc.a
@@ -36,7 +33,7 @@ PREFIX:=$(FOLDERPREFIX)/xtensa-lx106-elf-
 CC:=$(PREFIX)gcc
 
 
-CFLAGS:=-mlongcalls -I$(SDK)/include -Imyclib -Iinclude -Iuser -Os -I$(SDK)/include/ -Icommon -DICACHE_FLASH -Ietherhelp
+CFLAGS:=-mlongcalls -I $(SDK)/include -Imyclib -Iinclude -Iuser -Os -I $(SDK)/include/ -Icommon -DICACHE_FLASH -Ietherhelp
 CFLAGS:= $(CFLAGS)	-Wl,--gc-sections -flto
 
 #Enable full duplex?
@@ -68,7 +65,7 @@ LDFLAGS_CORE:=\
 
 LINKFLAGS:= \
 	$(LDFLAGS_CORE) \
-	-B$(XTLIB)
+	-B $(XTLIB)
 
 #image.elf : $(OBJS)
 #	$(PREFIX)ld $^ $(LDFLAGS) -o $@
@@ -77,17 +74,15 @@ $(TARGET_OUT) : $(SRCS)
 	$(PREFIX)gcc $(CFLAGS) $^  $(LINKFLAGS) -o $@
 	nm -S -n $(TARGET_OUT) > image.map
 	$(PREFIX)objdump -S $@ > image.lst
+	$(PREFIX)size -A $(TARGET_OUT) | grep -v debug
 
-$(FW_FILE_1): $(TARGET_OUT)
+
+$(FW_FILES): $(TARGET_OUT)
 	@echo "FW $@"
-	$(FW_TOOL) -eo $(TARGET_OUT) -bo $@ -bs .text -bs .data -bs .rodata -bc -ec
+	PATH=$(FOLDERPREFIX):$$PATH;$(ESPTOOL_PY) elf2image $(TARGET_OUT)
 
-$(FW_FILE_2): $(TARGET_OUT)
-	@echo "FW $@"
-	$(FW_TOOL) -eo $(TARGET_OUT) -es .irom0.text $@ -ec
-
-burn : $(FW_FILE_1) $(FW_FILE_2)
-	($(ESPTOOL_PY) --port $(PORT) write_flash 0x00000 0x00000.bin 0x40000 0x40000.bin)||(true)
+burn : $(FW_FILES)
+	($(ESPTOOL_PY) --port $(PORT) write_flash 0x00000 image.elf-0x00000.bin 0x40000 image.elf-0x40000.bin)||(true)
 
 #If you have space, MFS should live at 0x100000, if you don't it can also live at
 #0x10000.  But, then it is limited to 180kB.  You might need to do this if you have a 512kB 
@@ -97,12 +92,15 @@ burnweb : web/page.mpfs
 	($(ESPTOOL_PY) --port $(PORT) write_flash 0x10000 web/page.mpfs)||(true)
 
 
-IP?=192.168.4.1
+IP?=10.1.10.5
 
-netburn : image.elf $(FW_FILE_1) $(FW_FILE_2)
-	web/execute_reflash $(IP) 0x00000.bin 0x40000.bin
+netburn : image.elf $(FW_FILES)
+	web/execute_reflash $(IP) image.elf-0x00000.bin image.elf-0x40000.bin
+
+mii :
+	sudo mii-tool -F 10baseT-FD eth0
 
 clean :
-	rm -rf user/*.o driver/*.o $(TARGET_OUT) $(FW_FILE_1) $(FW_FILE_2) image.lst image.map
+	rm -rf user/*.o driver/*.o $(TARGET_OUT) $(FW_FILES) image.lst image.map
 
 
