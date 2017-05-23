@@ -30,15 +30,10 @@ ICACHE_FLASH_ATTR uint16_t internet_checksum( const unsigned char * start, uint1
 	const uint16_t * wptr = (uint16_t*) start;
 	uint32_t csum = 0;
 	for (i=1;i<len;i+=2)
-	{
-		csum = csum + (uint32_t)(*(wptr++));	
-	}
+		csum += (uint32_t)(*(wptr++));	
 	if( len & 1 )  //See if there's an odd number of bytes?
-	{
-		uint8_t * tt = (uint8_t*)wptr;
-		csum += *tt;
-	}
-	while (csum>>16)
+		csum += *(uint8_t*)wptr;
+	if (csum>>16)
 		csum = (csum & 0xFFFF)+(csum >> 16);
 	csum = (csum>>8) | ((csum&0xff)<<8);
 	return ~csum;
